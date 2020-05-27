@@ -1,8 +1,8 @@
-﻿player_name,portfolio_owned,starting_money,password
-Player_1,Big Coal,10000,player
-Player_2,Big Gas,10000,player
-Player_3,Bay Views,10000,player
-Player_4,Beachfront,10000,player
-Player_5,East Bay,10000,player
-Player_6,Old Timers,10000,player
-Player_7,Fossil Light,10000,player
+﻿player_name,portfolio_owned,portfolio_id,starting_money,password
+Player_1,Big Coal,1,10000,player
+Player_2,Big Gas,2,10000,player
+Player_3,Bay Views,3,10000,player
+Player_4,Beachfront,4,10000,player
+Player_5,East Bay,5,10000,player
+Player_6,Old Timers,6,10000,player
+Player_7,Fossil Light,7,10000,player
