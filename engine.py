@@ -18,7 +18,7 @@ users_df = pd.read_csv('csv/config/users.csv')
 #     [player_{player_id}_revenue,player_{player_id}_cost,player_{player_id}_profit],
 #     [player_{player_id}_balance] 
 
-def create_summary_sheet(users_df, demands_df):
+def create_summary_sheet(demands_df, users_df):
     user_ids = users_df['portfolio_id'].tolist()
 
     # lambda functions for the header-generating list comprehension
@@ -74,7 +74,7 @@ def create_hourly_sheets(demands_df, portfolios_df):
 #     number of rounds and hours. Note that this structure enables unit-specific adjustment bids; 
 #     whether or not players can specify those values is at the discretion of the bid form creator. 
 
-def create_bids_sheet(portfolios_df, demands_df):
+def create_bids_sheet(demands_df, portfolios_df):
     # a list of (round, hour) pairs, for the purpose of naming the repeated columns
     round_hour_tuples = list(demands_df[['round', 'hour']].itertuples(index=False, name=None))
 
@@ -95,9 +95,6 @@ def create_bids_sheet(portfolios_df, demands_df):
     bids_df.to_csv('csv/bids.csv')
 
 
-create_summary_sheet(users_df, demands_df)
+create_summary_sheet(demands_df, users_df)
 create_hourly_sheets(demands_df, portfolios_df)
-create_bids_sheet(portfolios_df, demands_df)
-
-
-
+create_bids_sheet(demands_df, portfolios_df)
