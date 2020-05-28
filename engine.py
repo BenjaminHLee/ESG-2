@@ -41,4 +41,28 @@ def create_summary_sheet(users_csv, demands_csv):
     # summary.csv is saved in the /csv/ directory.
     summary_csv.to_csv('csv/summary.csv')
 
+# HOURLY SPREADSHEETS:
+# A set of spreadsheets (one per hour) recording bids, production, and revenue/cost for each unit. 
+# -   round_{round}_hour_{hour} : portfolio_id,portfolio_name,unit_id,unit_name,unit_location,
+#     unit_capacity,
+#     cost_per_mwh,cost_daily_om,carbon_per_mwh, 
+#     bid_base,bid_up,bid_down, 
+#     activated,mwh_produced,mwh_adjusted_down,carbon_produced,price, 
+#     revenue,adjust_down_revenue,cost_var,cost_om,profit 
+
+def create_hourly_sheets(demands_csv, portfolios_csv):
+    # a list of (round, hour) pairs, for the purpose of naming each sheet
+    round_hour_tuples = list(demands_csv[['round', 'hour']].itertuples(index=False, name=None))
+
+    hourly_additional_headers = ['bid_base','bid_up','bid_down','activated','mwh_produced',
+                                 'mwh_adjusted_down','carbon_produced','price','revenue',
+                                 'adjust_down_revenue','cost_var','cost_om','profit']
+
+    for (r, h) in round_hour_tuples:
+        hourly_csv = pd.concat([portfolios_csv, pd.DataFrame(columns=(hourly_additional_headers))], axis=1)
+
+        # round_r_hour_h.csv is saved in the /csv/hourly/ directory.
+        hourly_csv.to_csv('csv/hourly/round_' + str(r) + '_hour_' + str(h) + '.csv')
+
 create_summary_sheet(users_csv, demands_csv)
+create_hourly_sheets(demands_csv, portfolios_csv)
