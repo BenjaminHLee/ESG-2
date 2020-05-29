@@ -39,7 +39,7 @@ def create_summary_sheet(demands_df, users_df):
     summary_df = pd.concat([demands_df, pd.DataFrame(columns=(['price'] + summary_player_headers))], axis=1)
 
     # summary.csv is saved in the /csv/ directory.
-    summary_df.to_csv('csv/summary.csv')
+    summary_df.to_csv('csv/summary.csv', index=False)
 
 # HOURLY SPREADSHEETS:
 # A set of spreadsheets (one per hour) recording bids, production, and revenue/cost for each unit. 
@@ -61,7 +61,7 @@ def create_hourly_sheets(demands_df, portfolios_df):
     for (r, h) in round_hour_tuples:
         hourly_df = pd.concat([portfolios_df, pd.DataFrame(columns=(hourly_additional_headers))], axis=1)
         # round_r_hour_h.csv is saved in the /csv/hourly/ directory.
-        hourly_df.to_csv('csv/hourly/round_' + str(r) + '_hour_' + str(h) + '.csv')
+        hourly_df.to_csv('csv/hourly/round_' + str(r) + '_hour_' + str(h) + '.csv', index=False)
 
 # CURRENT BID SPREADSHEET:
 # Records bids for all hours as submitted by players. Constantly updating according to player form 
@@ -91,7 +91,7 @@ def create_bids_sheet(demands_df, portfolios_df):
     bids_df = pd.concat([portfolios_df[portfolios_headers], pd.DataFrame(columns=bids_r_h_headers)], axis=1)
 
     # bids.csv is saved in the /csv/ directory.
-    bids_df.to_csv('csv/bids.csv')
+    bids_df.to_csv('csv/bids.csv',index=False)
 
 
 # create_summary_sheet(demands_df, users_df)
@@ -321,9 +321,13 @@ def run_hour(r, h):
     # complete hourly sheet columns carbon_produced,revenue,adjust_down_revenue,cost_var,cost_om,profit
     hourly_df = complete_hourly_sheet(hourly_df, last)
 
-    hourly_df.to_csv('csv/hourly/round_' + str(r) + '_hour_' + str(h) + '.csv') 
+    hourly_df.to_csv('csv/hourly/round_' + str(r) + '_hour_' + str(h) + '.csv',index=False) 
 
 #TODO: Implement update_summary
+
+create_summary_sheet(demands_df, users_df)
+
+create_hourly_sheets(demands_df, portfolios_df)
 
 run_hour(1, 1)
 
