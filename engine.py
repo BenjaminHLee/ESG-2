@@ -60,7 +60,6 @@ def create_hourly_sheets(demands_df, portfolios_df):
 
     for (r, h) in round_hour_tuples:
         hourly_df = pd.concat([portfolios_df, pd.DataFrame(columns=(hourly_additional_headers))], axis=1)
-
         # round_r_hour_h.csv is saved in the /csv/hourly/ directory.
         hourly_df.to_csv('csv/hourly/round_' + str(r) + '_hour_' + str(h) + '.csv')
 
@@ -100,9 +99,7 @@ def create_bids_sheet(demands_df, portfolios_df):
 # create_bids_sheet(demands_df, portfolios_df)
 
 
-def determine_active_units(r, h, bids_df, demands_df, portfolios_df):
-    hourly_df = pd.read_csv('csv/hourly/round_' + str(r) + '_hour_' + str(h) + '.csv')
-
+def determine_active_units(r, h, bids_df, demands_df, hourly_df, portfolios_df):
     # Read bids from bids_df into hourly_df
     hourly_df['bid_base'] = bids_df[('bid_base_' + str(r) + '_' + str(h))]
     hourly_df['bid_up']   = bids_df[('bid_up_'   + str(r) + '_' + str(h))]
@@ -118,7 +115,8 @@ def determine_active_units(r, h, bids_df, demands_df, portfolios_df):
     # This means that we're going to be 'working-in-place' on the hourly dataframe while running this function.
     hourly_df = run_initial_activation(r, h, demands_df, hourly_df) # HACK only works because demand is perfectly inelastic
 
-    hourly_df.to_csv('test.csv') 
+    # Not all of the plants are going to be checked for adjustment down; initializing with 0's avoids later issues
+    hourly_df['mwh_adjusted_down'] = 0
 
     # Check zone specific production
     north_production = hourly_df.loc[(hourly_df['unit_location'] == "North")]['mwh_produced'].sum()
@@ -219,9 +217,7 @@ def determine_active_units(r, h, bids_df, demands_df, portfolios_df):
                 hourly_df.loc[(hourly_df['unit_id'] == unit['unit_id']),'price'] = unit['bid_base'] - unit['bid_up']
             deficit -= mwh_increased
 
-
-    hourly_df.to_csv('test-post-adjust.csv') 
-
+    return hourly_df
 
 # def construct_net_supply_curve(hourly_df):
 #     first  = lambda x: x[0]
@@ -263,4 +259,74 @@ def run_initial_activation(r, h, demands_df, hourly_df):
 
     return hourly_df
 
-determine_active_units(1, 1, pd.read_csv('csv/bids.csv'), demands_df, portfolios_df)
+
+def complete_hourly_sheet(hourly_df, last_hour):
+    # carbon_produced
+    carbon_record = []
+    # revenue
+    revenue_record = []
+    # adjust_down_revenue
+    adjust_rev_record = []
+    # cost_var
+    cost_var_record = []
+    # cost_om
+    cost_om_record = []
+    # profit
+    profit_record = []
+
+    for _, unit in hourly_df.iterrows(): # HACK : you need to learn how to avoid this
+        # bid_down,cost_per_mwh,cost_daily_om,carbon_per_mwh,mwh_produced,mwh_adjusted_down,price
+        mwh = unit['mwh_produced']
+        (bid_down,cost_per_mwh,cost_daily_om,
+         carbon_per_mwh,mwh_adjusted_down,price) = unit[['bid_down','cost_per_mwh','cost_daily_om',
+                                                         'carbon_per_mwh','mwh_adjusted_down','price']]
+        carbon_record.append(mwh * carbon_per_mwh)
+        revenue_record.append(mwh * price)
+        adjust_rev_record.append(mwh_adjusted_down * bid_down)
+        cost_var_record.append(mwh * cost_per_mwh)
+        if last_hour:
+            cost_om = cost_daily_om
+        else:
+            cost_om = 0
+        cost_om_record.append(cost_om)
+        profit_record.append(mwh * price + mwh_adjusted_down * bid_down - mwh * cost_per_mwh - cost_om)
+
+    # carbon_produced,revenue,adjust_down_revenue,cost_var,cost_om,profit
+    hourly_df['carbon_produced']     = pd.Series(carbon_record, index=hourly_df.index[:len(carbon_record)])
+    hourly_df['revenue']             = pd.Series(revenue_record, index=hourly_df.index[:len(revenue_record)])
+    hourly_df['adjust_down_revenue'] = pd.Series(adjust_rev_record, index=hourly_df.index[:len(adjust_rev_record)])
+    hourly_df['cost_var']            = pd.Series(cost_var_record, index=hourly_df.index[:len(cost_var_record)])
+    hourly_df['cost_om']             = pd.Series(cost_om_record, index=hourly_df.index[:len(cost_om_record)])
+    hourly_df['profit']              = pd.Series(profit_record, index=hourly_df.index[:len(profit_record)])
+
+    return hourly_df
+
+def last_hour(r, h):
+    if (h == 4):
+        return True
+    else:
+        return False
+
+def run_hour(r, h):
+    # read hourly csv
+    hourly_df = pd.read_csv('csv/hourly/round_' + str(r) + '_hour_' + str(h) + '.csv')
+    # read bids csv
+    bids_df = pd.read_csv('csv/bids.csv')
+    # determine active units
+    hourly_df = determine_active_units(r, h, bids_df, demands_df, hourly_df, portfolios_df)
+
+    # check if it's the last hour of the round
+    last = last_hour(r, h)
+
+    # complete hourly sheet columns carbon_produced,revenue,adjust_down_revenue,cost_var,cost_om,profit
+    hourly_df = complete_hourly_sheet(hourly_df, last)
+
+    hourly_df.to_csv('csv/hourly/round_' + str(r) + '_hour_' + str(h) + '.csv') 
+
+#TODO: Implement update_summary
+
+run_hour(1, 1)
+
+
+
+
