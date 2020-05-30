@@ -4,13 +4,6 @@
 import numpy as np
 import pandas as pd
 
-import csv
-
-
-# read CONFIG SPREADSHEETS from /csv/config files
-demands_df = pd.read_csv('csv/config/demands.csv')
-portfolios_df = pd.read_csv('csv/config/portfolios.csv')
-users_df = pd.read_csv('csv/config/users.csv')
 
 # SUMMARY SPREADSHEET:
 # Captures a macroscopic summary of performance over hours.
@@ -374,6 +367,15 @@ def update_summary(r, h, summary_df, users_df):
         summary_df.loc[(summary_df['round'] == r) & (summary_df['hour'] == h),balance_header] = balance
 
     summary_df.to_csv('csv/summary.csv', index=False)
+
+
+# read CONFIG SPREADSHEETS from /csv/config files
+demands_df = pd.read_csv('csv/config/demands.csv')
+portfolios_df = pd.read_csv('csv/config/portfolios.csv')
+users_df = pd.read_csv('csv/config/users.csv')
+
+demands_df = demands_df.sort_values(by=['round', 'hour'], ascending=[True, True])
+users_df = users_df.sort_values(by=['portfolio_id'], ascending=[True])
 
 
 create_summary_sheet(demands_df, users_df)
