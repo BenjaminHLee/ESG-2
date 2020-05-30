@@ -329,6 +329,8 @@ def update_summary(r, h, summary_df, users_df):
 
     portfolio_ids = users_df['portfolio_id'].tolist()
 
+    print("Hour summary:")
+
     for portfolio_id in portfolio_ids:
         portfolio_df = hourly_df.loc[hourly_df['portfolio_id'] == portfolio_id]
 
@@ -336,8 +338,6 @@ def update_summary(r, h, summary_df, users_df):
         costs = portfolio_df['cost_var'].sum() + portfolio_df['cost_om'].sum()
         profits = portfolio_df['profit'].sum()
 
-        name = portfolio_df['portfolio_name'].iloc[0] # TODO : the portfolio_id,portfolio_name repitition is a SPoT violation 
-        print("Portfolio {} - Revenue ${} Cost ${} Profit ${}".format(name, revenues, costs, profits))
 
         prefix = "player_" + str(portfolio_id) + "_"
         revenue_header = prefix + "revenue"
@@ -362,7 +362,10 @@ def update_summary(r, h, summary_df, users_df):
             # otherwise, look at the value above and add profits
             balance = users_df[balance_header].shift(1) + profits 
 
-        print(balance)
+        name = portfolio_df['portfolio_name'].iloc[0] 
+        # TODO : the portfolio_id,portfolio_name repitition in portfolios.csv is a SPoT violation; rethink structure 
+        print("{} Current balance: ${:0.2f} Revenue: ${:0.2f} Cost: ${:0.2f} Profit: ${:0.2f}"
+                .format(name, balance, revenues, costs, profits))
 
         summary_df.loc[(summary_df['round'] == r) & (summary_df['hour'] == h),balance_header] = balance
 
@@ -387,5 +390,5 @@ run_hour(1, 1)
 print("Hour run; updating summary")
 update_summary(1, 1, summary_df, users_df)
 
-# TODO : Fix sig fig inconsistencies
+# TODO : Fix decimal inconsistencies
 
