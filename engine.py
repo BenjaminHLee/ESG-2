@@ -299,12 +299,11 @@ def last_hour(r, h): # TODO: update this to handle variable numbers of hours
     else:
         return False
 
-def run_hour(r, h):
+def run_hour(r, h, bids_df):
     print("Running round {} hour {}".format(r, h))
     # read hourly csv
     hourly_df = pd.read_csv('csv/hourly/round_' + str(r) + '_hour_' + str(h) + '.csv')
-    # read bids csv
-    bids_df = pd.read_csv('csv/bids.csv')
+
     # determine active units
     hourly_df = determine_active_units(r, h, bids_df, demands_df, hourly_df, portfolios_df)
 
@@ -387,21 +386,22 @@ create_summary_sheet(demands_df, users_df)
 create_hourly_sheets(demands_df, portfolios_df)
 
 summary_df = pd.read_csv('csv/summary.csv')
+bids_df = pd.read_csv('csv/bids.csv')
 
 print("Running hour 1")
-run_hour(1, 1)
+run_hour(1, 1, bids_df)
 print("Hour 1 run; updating summary")
 update_summary(1, 1, summary_df, users_df)
 
-run_hour(1, 2)
+run_hour(1, 2, bids_df)
 print("Hour 2 run; updating summary")
 update_summary(1, 2, summary_df, users_df)
 
-run_hour(1, 3)
+run_hour(1, 3, bids_df)
 print("Hour 3 run; updating summary")
 update_summary(1, 3, summary_df, users_df)
 
-run_hour(1, 4)
+run_hour(1, 4, bids_df)
 print("Hour 4 run; updating summary")
 update_summary(1, 4, summary_df, users_df)
 
