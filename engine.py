@@ -116,8 +116,8 @@ def determine_active_units(r, h, bids_df, demands_df, hourly_df, portfolios_df):
     south_production = hourly_df.loc[(hourly_df['unit_location'] == "South")]['mwh_produced'].sum()
 
     # Compare to zone specific demand
-    north_demand = demands_df.loc[(demands_df['round'] == r) & (demands_df['hour'] == h)]['north'][0]
-    south_demand = demands_df.loc[(demands_df['round'] == r) & (demands_df['hour'] == h)]['south'][0]
+    north_demand = demands_df.loc[(demands_df['round'] == r) & (demands_df['hour'] == h)]['north'].values.item()
+    south_demand = demands_df.loc[(demands_df['round'] == r) & (demands_df['hour'] == h)]['south'].values.item()
 
     print("North prod: {} / North demand: {}".format(north_production, north_demand))
     print("South prod: {} / South demand: {}".format(south_production, south_demand))
@@ -218,7 +218,7 @@ def determine_active_units(r, h, bids_df, demands_df, hourly_df, portfolios_df):
 
 def run_initial_activation(r, h, demands_df, hourly_df):
     # HACK only works because demand is perfectly inelastic
-    net_demand = demands_df.loc[(demands_df['round'] == r) & (demands_df['hour'] == h)]['net'][0]
+    net_demand = demands_df.loc[(demands_df['round'] == r) & (demands_df['hour'] == h)]['net'].values.item()
 
     hourly_df = hourly_df.sort_values(by=['bid_base', 'unit_id'])
 
@@ -300,6 +300,7 @@ def last_hour(r, h): # TODO: update this to handle variable numbers of hours
         return False
 
 def run_hour(r, h):
+    print("Running round {} hour {}".format(r, h))
     # read hourly csv
     hourly_df = pd.read_csv('csv/hourly/round_' + str(r) + '_hour_' + str(h) + '.csv')
     # read bids csv
@@ -360,7 +361,8 @@ def update_summary(r, h, summary_df, users_df):
             balance = users_df.loc[(users_df['portfolio_id'] == portfolio_id),'starting_money'].values.astype(int)[0] + profits
         else:
             # otherwise, look at the value above and add profits
-            balance = users_df[balance_header].shift(1) + profits 
+            current_row_index = summary_df.loc[(summary_df['round'] == r) & (summary_df['hour'] == h)].index.values.astype(int)[0]
+            balance = summary_df.iloc[current_row_index - 1][balance_header] + profits 
 
         name = portfolio_df['portfolio_name'].iloc[0] 
         # TODO : the portfolio_id,portfolio_name repitition in portfolios.csv is a SPoT violation; rethink structure 
@@ -386,9 +388,24 @@ create_hourly_sheets(demands_df, portfolios_df)
 
 summary_df = pd.read_csv('csv/summary.csv')
 
+print("Running hour 1")
 run_hour(1, 1)
-print("Hour run; updating summary")
+print("Hour 1 run; updating summary")
 update_summary(1, 1, summary_df, users_df)
+
+run_hour(1, 2)
+print("Hour 2 run; updating summary")
+update_summary(1, 2, summary_df, users_df)
+
+run_hour(1, 3)
+print("Hour 3 run; updating summary")
+update_summary(1, 3, summary_df, users_df)
+
+run_hour(1, 4)
+print("Hour 4 run; updating summary")
+update_summary(1, 4, summary_df, users_df)
+
+
 
 # TODO : Fix decimal inconsistencies
 
