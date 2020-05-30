@@ -13,8 +13,8 @@ portfolios_df = pd.read_csv('csv/config/portfolios.csv')
 users_df = pd.read_csv('csv/config/users.csv')
 
 # SUMMARY SPREADSHEET:
-# Captures a macroscopic summary of prices over hours.
-# -   summary : round,hour,north,south,net,price,
+# Captures a macroscopic summary of performance over hours.
+# -   summary : round,hour,north,south,net,
 #     [player_{player_id}_revenue,player_{player_id}_cost,player_{player_id}_profit],
 #     [player_{player_id}_balance] 
 
@@ -36,7 +36,7 @@ def create_summary_sheet(demands_df, users_df):
     # important to load from the True summary.csv file whenever the data is needed, instead of a potentially out-of-
     # date summary_df variable. Whenever possible, functions should interact indirectly through writing to summary.csv
     # and then reading summary.csv, instead of chaining functions directly.
-    summary_df = pd.concat([demands_df, pd.DataFrame(columns=(['price'] + summary_player_headers))], axis=1)
+    summary_df = pd.concat([demands_df, pd.DataFrame(columns=(summary_player_headers))], axis=1)
 
     # summary.csv is saved in the /csv/ directory.
     summary_df.to_csv('csv/summary.csv', index=False)
@@ -259,7 +259,6 @@ def run_initial_activation(r, h, demands_df, hourly_df):
 
     return hourly_df
 
-
 def complete_hourly_sheet(hourly_df, last_hour):
     # carbon_produced
     carbon_record = []
@@ -301,7 +300,7 @@ def complete_hourly_sheet(hourly_df, last_hour):
 
     return hourly_df
 
-def last_hour(r, h):
+def last_hour(r, h): # TODO: update this to handle variable numbers of hours
     if (h == 4):
         return True
     else:
@@ -325,12 +324,66 @@ def run_hour(r, h):
 
 #TODO: Implement update_summary
 
-create_summary_sheet(demands_df, users_df)
 
+# SUMMARY SPREADSHEET:
+# Captures a macroscopic summary of performance over hours.
+# -   summary : round,hour,north,south,net,
+#     [player_{player_id}_revenue,player_{player_id}_cost,player_{player_id}_profit],
+#     [player_{player_id}_balance] 
+
+def update_summary(r, h, summary_df, users_df):
+    hourly_df = pd.read_csv('csv/hourly/round_' + str(r) + '_hour_' + str(h) + '.csv')
+
+    portfolio_ids = users_df['portfolio_id'].tolist()
+
+    for portfolio_id in portfolio_ids:
+        portfolio_df = hourly_df.loc[hourly_df['portfolio_id'] == portfolio_id]
+
+        revenues = portfolio_df['revenue'].sum() + portfolio_df['adjust_down_revenue'].sum()
+        costs = portfolio_df['cost_var'].sum() + portfolio_df['cost_om'].sum()
+        profits = portfolio_df['profit'].sum()
+
+        name = portfolio_df['portfolio_name'].iloc[0] # TODO : the portfolio_id,portfolio_name repitition is a SPoT violation 
+        print("Portfolio {} - Revenue ${} Cost ${} Profit ${}".format(name, revenues, costs, profits))
+
+        prefix = "player_" + str(portfolio_id) + "_"
+        revenue_header = prefix + "revenue"
+        cost_header    = prefix + "cost"
+        profit_header  = prefix + "profit"
+        balance_header = prefix + "balance"
+
+        summary_df.loc[(summary_df['round'] == r) & (summary_df['hour'] == h),revenue_header] = revenues
+        summary_df.loc[(summary_df['round'] == r) & (summary_df['hour'] == h),cost_header]    = costs
+        summary_df.loc[(summary_df['round'] == r) & (summary_df['hour'] == h),profit_header]  = profits
+
+        # update balance: 
+        # If it's the first round first hour, then be sure to factor in initial balance, 
+        # otherwise use previous balance and new profit
+
+        balance = 0
+
+        if (summary_df.loc[(summary_df['round'] == r) & (summary_df['hour'] == h)].index.values.astype(int)[0] == 0):
+            # if the round/hour row is at the top of the table, factor in starting money from users_df
+            balance = users_df.loc[(users_df['portfolio_id'] == portfolio_id),'starting_money'].values.astype(int)[0] + profits
+        else:
+            # otherwise, look at the value above and add profits
+            balance = users_df[balance_header].shift(1) + profits 
+
+        print(balance)
+
+        summary_df.loc[(summary_df['round'] == r) & (summary_df['hour'] == h),balance_header] = balance
+
+    summary_df.to_csv('csv/summary.csv', index=False)
+
+
+create_summary_sheet(demands_df, users_df)
 create_hourly_sheets(demands_df, portfolios_df)
 
+summary_df = pd.read_csv('csv/summary.csv')
+
 run_hour(1, 1)
+print("Hour run; updating summary")
+update_summary(1, 1, summary_df, users_df)
 
-
-
+# TODO : Fix sig fig inconsistencies
 

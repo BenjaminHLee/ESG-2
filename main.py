@@ -22,13 +22,12 @@
 # -   config : TODO add things as they appear necessary
 
 # SUMMARY SPREADSHEET:
-# Captures a macroscopic summary of prices over hours.
-# -   summary : round,hour,north,south,net,price,
+# Captures a macroscopic summary of performance over hours.
+# -   summary : round,hour,north,south,net,
 #     [player_{player_id}_revenue,player_{player_id}_cost,player_{player_id}_profit],
 #     [player_{player_id}_balance] 
-#     : market price, cost of adjustments, and balances for each hour of each round. Note: the square 
-#     brackets indicate that these columns are to be repeated dynamically based on the number of 
-#     players.
+#     : cost of adjustments, and balances for each hour of each round. Note: the square brackets
+#     indicate that these columns are to be repeated dynamically based on the number of players.
 
 # HOURLY SPREADSHEETS:
 # A set of spreadsheets (one per hour) recording bids, production, and revenue/cost for each unit. 
