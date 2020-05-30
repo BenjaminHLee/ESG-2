@@ -19,8 +19,8 @@ Initial program setup. This does not change during the game.
 
 #### SUMMARY SPREADSHEET:
 
-Captures a macroscopic summary of prices over hours.
-- `summary` : `round,hour,north,south,net,price, [player_{player_id}_revenue,player_{player_id}_cost,player_{player_id}_profit],[player_{player_id}_balance]` : market price, cost of adjustments, and balances for each hour of each round. Note: the square brackets indicate that these columns are to be repeated dynamically based on the number of players.
+Captures a macroscopic summary of performance over hours.
+- `summary` : `round,hour,north,south,net, [player_{player_id}_revenue,player_{player_id}_cost,player_{player_id}_profit],[player_{player_id}_balance]` : cost of adjustments, and balances for each hour of each round. Note: the square brackets indicate that these columns are to be repeated dynamically based on the number of players.
 
 #### HOURLY SPREADSHEETS:
 
