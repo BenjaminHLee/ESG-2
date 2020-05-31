@@ -393,14 +393,17 @@ run_hour(1, 1, bids_df)
 print("Hour 1 run; updating summary")
 update_summary(1, 1, summary_df, users_df)
 
+print("Running hour 2")
 run_hour(1, 2, bids_df)
 print("Hour 2 run; updating summary")
 update_summary(1, 2, summary_df, users_df)
 
+print("Running hour 3")
 run_hour(1, 3, bids_df)
 print("Hour 3 run; updating summary")
 update_summary(1, 3, summary_df, users_df)
 
+print("Running hour 4")
 run_hour(1, 4, bids_df)
 print("Hour 4 run; updating summary")
 update_summary(1, 4, summary_df, users_df)
