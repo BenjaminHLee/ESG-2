@@ -147,17 +147,19 @@ def determine_active_units(r, h, bids_df, demands_df, hourly_df, portfolios_df):
             if (mwh_reduced == unit_production):
                 hourly_df.loc[(hourly_df['unit_id'] == unit['unit_id']),'activated'] = 0
             excess -= mwh_reduced
+            print("Reduced unit {} (base: {}, down: {}) production by {} MWh to {} MWh. Remaining excess: {}"
+                    .format(unit['unit_id'], unit['bid_base'], unit['bid_down'], mwh_reduced, (unit_production - mwh_reduced), excess))
 
         # ACTIVATE south plants
         # filter for inactive plants in the south
-        inactive_south_df = hourly_df.loc[(hourly_df['unit_location'] == "Sorth") & (hourly_df['activated'] == 0)]
+        inactive_south_df = hourly_df.loc[(hourly_df['unit_location'] == "South") & (hourly_df['activated'] == 0)]
         # sort by up adjustment bid (descending), initial bid (ascending), then unit id (ascending)
         inactive_south_df = inactive_south_df.sort_values(by=['bid_up', 'bid_base', 'unit_id'], ascending=[False, True, True])
 
         deficit = south_demand - south_production - 2500 # 2500 from north
         
         for _, unit in inactive_south_df.iterrows(): # HACK : antipattern
-            unit_capacity = unit['unit_capcity']
+            unit_capacity = unit['unit_capacity']
             # Ramp up until deficit is resolved or unit is at max capacity
             mwh_increased = min(abs(unit_capacity), deficit)
             # Edit hourly_df to reflect update
@@ -167,6 +169,12 @@ def determine_active_units(r, h, bids_df, demands_df, hourly_df, portfolios_df):
                 # record CAISO-met bid minus paid upwards adjustment bid = price received for that electricity
                 hourly_df.loc[(hourly_df['unit_id'] == unit['unit_id']),'price'] = unit['bid_base'] - unit['bid_up']
             deficit -= mwh_increased
+            print("Increased unit {} (base: {}, down: {}) production by {} MWh to {} MWh at price ${}. Remaining deficit: {}"
+                    .format(unit['unit_id'], mwh_increased, unit['bid_base'], unit['bid_down'],
+                    (hourly_df.loc[(hourly_df['unit_id'] == unit['unit_id']),'mwh_produced'].values.item()), 
+                    (unit['bid_base'] - unit['bid_up']), deficit))
+
+
     elif (south_production - south_demand >= 5000):
         print("South overproducing.")
         # north has a deficit, south has a surplus
@@ -189,6 +197,8 @@ def determine_active_units(r, h, bids_df, demands_df, hourly_df, portfolios_df):
             if (mwh_reduced == unit_production):
                 hourly_df.loc[(hourly_df['unit_id'] == unit['unit_id']),'activated'] = 0
             excess -= mwh_reduced
+            print("Reduced unit {} (base: {}, down: {}) production by {} MWh to {} MWh. Remaining excess: {}"
+                    .format(unit['unit_id'], unit['bid_base'], unit['bid_down'], mwh_reduced, (unit_production - mwh_reduced), excess))
 
         # ACTIVATE north plants
         # filter for inactive plants in the north
@@ -209,6 +219,10 @@ def determine_active_units(r, h, bids_df, demands_df, hourly_df, portfolios_df):
                 # record CAISO-met bid minus paid upwards adjustment bid = price received for that electricity
                 hourly_df.loc[(hourly_df['unit_id'] == unit['unit_id']),'price'] = unit['bid_base'] - unit['bid_up']
             deficit -= mwh_increased
+            print("Increased unit {} (base: {}, down: {}) production by {} MWh to {} MWh at price ${}. Remaining deficit: {}"
+                    .format(unit['unit_id'], mwh_increased, unit['bid_base'], unit['bid_down'],
+                    (hourly_df.loc[(hourly_df['unit_id'] == unit['unit_id']),'mwh_produced'].values.item()), 
+                    (unit['bid_base'] - unit['bid_up']), deficit))
 
     return hourly_df
 
@@ -219,6 +233,9 @@ def determine_active_units(r, h, bids_df, demands_df, hourly_df, portfolios_df):
 def run_initial_activation(r, h, demands_df, hourly_df):
     # HACK only works because demand is perfectly inelastic
     net_demand = demands_df.loc[(demands_df['round'] == r) & (demands_df['hour'] == h)]['net'].values.item()
+
+    print("Calculating net curve")
+    print("Net demand: {}".format(net_demand))
 
     hourly_df = hourly_df.sort_values(by=['bid_base', 'unit_id'])
 
@@ -242,13 +259,15 @@ def run_initial_activation(r, h, demands_df, hourly_df):
             if (remaining_demand == 0):
                 price = unit['bid_base']
         production_record.append(mwh_produced)
+        print("Unit {} (bid {}) produced {} MWh. Running production: {}. Remaining demand: {}"
+                .format(unit['unit_id'], unit['bid_base'], mwh_produced, running_production, remaining_demand))
         
     # To avoid mutating something while iterating over it, we store the production of each plant in an array.
     # Only after we're done iterating do we write to the hourly dataframe.
     # This seems scuffed
     hourly_df['activated']    = pd.Series(activation_record, index=hourly_df.index[:len(activation_record)])
-    hourly_df['mwh_produced'] = pd.Series(production_record, index=hourly_df.index[:len(production_record)])
-    hourly_df['price']        = price
+    hourly_df['mwh_produced'] = round(pd.Series(production_record, index=hourly_df.index[:len(production_record)]), 2)
+    hourly_df['price']        = round(price, 2)
 
     return hourly_df
 
@@ -388,25 +407,21 @@ create_hourly_sheets(demands_df, portfolios_df)
 summary_df = pd.read_csv('csv/summary.csv')
 bids_df = pd.read_csv('csv/bids.csv')
 
-print("Running hour 1")
-run_hour(1, 1, bids_df)
-print("Hour 1 run; updating summary")
-update_summary(1, 1, summary_df, users_df)
+# run_hour(1, 1, bids_df)
+# print("Hour 1 run; updating summary")
+# update_summary(1, 1, summary_df, users_df)
 
-print("Running hour 2")
 run_hour(1, 2, bids_df)
 print("Hour 2 run; updating summary")
 update_summary(1, 2, summary_df, users_df)
 
-print("Running hour 3")
-run_hour(1, 3, bids_df)
-print("Hour 3 run; updating summary")
-update_summary(1, 3, summary_df, users_df)
+# run_hour(1, 3, bids_df)
+# print("Hour 3 run; updating summary")
+# update_summary(1, 3, summary_df, users_df)
 
-print("Running hour 4")
-run_hour(1, 4, bids_df)
-print("Hour 4 run; updating summary")
-update_summary(1, 4, summary_df, users_df)
+# run_hour(1, 4, bids_df)
+# print("Hour 4 run; updating summary")
+# update_summary(1, 4, summary_df, users_df)
 
 
 
