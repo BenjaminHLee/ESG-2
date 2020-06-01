@@ -157,3 +157,10 @@
 # spreadsheet now completed, the results are summarized and the summary.csv file updated. 
 # """
 
+
+from flask import Flask, render_template
+app = Flask(__name__)
+
+@app.route('/')
+def index():
+    return render_template('index.html')
