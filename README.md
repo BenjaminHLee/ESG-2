@@ -4,7 +4,7 @@ Prototype implementation of Electricity Strategy Game v2 based off of rules by V
 
 ## PROGRAM EXPLANATION
 
-This text specifies this implementation of the Electricity Strategy Game 2 ("ESG 2"). The ideas that went into this work can be found in Vassallo et al's specification and Ethan Knight's original implementation of the UC Berkeley Electricity Strategy Game by Severin Bornstein. Program logic is by Benjamin Lee. 
+This text specifies this implementation of the Electricity Strategy Game 2 ("ESG 2"). The ideas that went into this work can be found in Vassallo et al's specification and Ethan Knight's original implementation of the UC Berkeley Electricity Strategy Game by Severin Borenstein. Program logic is by Benjamin Lee. 
 
 ### DATA
 
