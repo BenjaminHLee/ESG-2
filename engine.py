@@ -40,16 +40,16 @@ def create_summary_sheet(demands_df, users_df):
 #     unit_capacity,
 #     cost_per_mwh,cost_daily_om,carbon_per_mwh, 
 #     bid_base,bid_up,bid_down, 
-#     activated,mwh_produced,mwh_adjusted_down,carbon_produced,price, 
-#     revenue,adjust_down_revenue,cost_var,cost_om,profit 
+#     activated,mwh_produced_initially,mwh_produced_base,mwh_adjusted_down,mwh_adjusted_up,mwh_produced,
+#     carbon_produced,base_revenue,adjust_down_revenue,adjust_up_revenue,revenue,cost_var,cost_om,profit 
 
 def create_hourly_sheets(demands_df, portfolios_df):
     # a list of (round, hour) pairs, for the purpose of naming each sheet
     round_hour_tuples = list(demands_df[['round', 'hour']].itertuples(index=False, name=None))
 
-    hourly_additional_headers = ['bid_base','bid_up','bid_down','activated','mwh_produced',
-                                 'mwh_adjusted_down','carbon_produced','price','revenue',
-                                 'adjust_down_revenue','cost_var','cost_om','profit']
+    hourly_additional_headers = ['bid_base','bid_up','bid_down','base_price','activated','mwh_produced_initially',
+                                 'mwh_produced_base','mwh_adjusted_down','mwh_adjusted_up','mwh_produced',
+                                 'carbon_produced','base_revenue','adjust_down_revenue','adjust_up_revenue','revenue','cost_var','cost_om','profit']
 
     for (r, h) in round_hour_tuples:
         hourly_df = pd.concat([portfolios_df, pd.DataFrame(columns=(hourly_additional_headers))], axis=1)
@@ -108,12 +108,13 @@ def determine_active_units(r, h, bids_df, demands_df, hourly_df, portfolios_df):
     # This means that we're going to be 'working-in-place' on the hourly dataframe while running this function.
     hourly_df = run_initial_activation(r, h, demands_df, hourly_df) # HACK only works because demand is perfectly inelastic
 
-    # Not all of the plants are going to be checked for adjustment down; initializing with 0's avoids later issues
+    # Not all of the plants are going to be checked for adjustment down/up; initializing with 0's avoids later issues
     hourly_df['mwh_adjusted_down'] = 0
+    hourly_df['mwh_adjusted_up'] = 0
 
     # Check zone specific production
-    north_production = hourly_df.loc[(hourly_df['unit_location'] == "North")]['mwh_produced'].sum()
-    south_production = hourly_df.loc[(hourly_df['unit_location'] == "South")]['mwh_produced'].sum()
+    north_production = hourly_df.loc[(hourly_df['unit_location'] == "North")]['mwh_produced_initially'].sum()
+    south_production = hourly_df.loc[(hourly_df['unit_location'] == "South")]['mwh_produced_initially'].sum()
 
     # Compare to zone specific demand
     north_demand = demands_df.loc[(demands_df['round'] == r) & (demands_df['hour'] == h)]['north'].values.item()
@@ -138,12 +139,12 @@ def determine_active_units(r, h, bids_df, demands_df, hourly_df, portfolios_df):
         print("North excess: {}".format(excess))
 
         for _, unit in active_north_df.iterrows(): # HACK : iterrows is an antipattern
-            unit_production = unit['mwh_produced']
+            unit_production = unit['mwh_produced_initially']
             # Ramp down until excess is resolved or the unit isn't producing any more
             mwh_reduced = min(abs(unit_production), excess)
             # Edit hourly_df to reflect update
-            hourly_df.loc[(hourly_df['unit_id'] == unit['unit_id']),'mwh_produced'] -= mwh_reduced
             hourly_df.loc[(hourly_df['unit_id'] == unit['unit_id']),'mwh_adjusted_down'] = mwh_reduced
+            hourly_df.loc[(hourly_df['unit_id'] == unit['unit_id']),'mwh_produced_base'] -= mwh_reduced
             if (mwh_reduced == unit_production):
                 hourly_df.loc[(hourly_df['unit_id'] == unit['unit_id']),'activated'] = 0
             excess -= mwh_reduced
@@ -151,8 +152,8 @@ def determine_active_units(r, h, bids_df, demands_df, hourly_df, portfolios_df):
                     .format(unit['unit_id'], unit['bid_base'], unit['bid_down'], mwh_reduced, (unit_production - mwh_reduced), excess))
 
         # ACTIVATE south plants
-        # filter for inactive plants in the south
-        inactive_south_df = hourly_df.loc[(hourly_df['unit_location'] == "South") & (hourly_df['activated'] == 0)]
+        # filter for not-fully-activated plants in the south
+        inactive_south_df = hourly_df.loc[(hourly_df['unit_location'] == "South") & (hourly_df['mwh_produced_initially'] < hourly_df['unit_capacity'])]
         # sort by up adjustment bid (descending), initial bid (ascending), then unit id (ascending)
         inactive_south_df = inactive_south_df.sort_values(by=['bid_up', 'bid_base', 'unit_id'], ascending=[False, True, True])
 
@@ -160,19 +161,17 @@ def determine_active_units(r, h, bids_df, demands_df, hourly_df, portfolios_df):
         
         for _, unit in inactive_south_df.iterrows(): # HACK : antipattern
             unit_capacity = unit['unit_capacity']
+            mwh_produced_initially = unit['mwh_produced_initially']
             # Ramp up until deficit is resolved or unit is at max capacity
-            mwh_increased = min(abs(unit_capacity), deficit)
-            # Edit hourly_df to reflect update
-            hourly_df.loc[(hourly_df['unit_id'] == unit['unit_id']),'mwh_produced'] += mwh_increased
+            mwh_increased = min(abs(unit_capacity - mwh_produced_initially), deficit)
+            # Log increased production
+            hourly_df.loc[(hourly_df['unit_id'] == unit['unit_id']),'mwh_adjusted_up'] = mwh_increased
             if (mwh_increased > 0):
                 hourly_df.loc[(hourly_df['unit_id'] == unit['unit_id']),'activated'] = 1
-                # record CAISO-met bid minus paid upwards adjustment bid = price received for that electricity
-                hourly_df.loc[(hourly_df['unit_id'] == unit['unit_id']),'price'] = unit['bid_base'] - unit['bid_up']
             deficit -= mwh_increased
-            print("Increased unit {} (base: {}, down: {}) production by {} MWh to {} MWh at price ${}. Remaining deficit: {}"
-                    .format(unit['unit_id'], mwh_increased, unit['bid_base'], unit['bid_down'],
-                    (hourly_df.loc[(hourly_df['unit_id'] == unit['unit_id']),'mwh_produced'].values.item()), 
-                    (unit['bid_base'] - unit['bid_up']), deficit))
+            print("Increased unit {} (base: {}, up: {}) production by {} MWh to {} MWh at price ${}. Remaining deficit: {}"
+                    .format(unit['unit_id'], unit['bid_base'], unit['bid_up'], mwh_increased,
+                    (mwh_produced_initially + mwh_increased),(unit['bid_base'] - unit['bid_up']), deficit))
 
 
     elif (south_production - south_demand >= 5000):
@@ -188,12 +187,12 @@ def determine_active_units(r, h, bids_df, demands_df, hourly_df, portfolios_df):
         print("South excess: {}".format(excess))
 
         for _, unit in active_south_df.iterrows(): # HACK : antipattern
-            unit_production = unit['mwh_produced']
+            unit_production = unit['mwh_produced_initially']
             # Ramp down until excess is resolved or the unit isn't producing any more
             mwh_reduced = min(abs(unit_production), excess)
             # Edit hourly_df to reflect update
-            hourly_df.loc[(hourly_df['unit_id'] == unit['unit_id']),'mwh_produced'] -= mwh_reduced
             hourly_df.loc[(hourly_df['unit_id'] == unit['unit_id']),'mwh_adjusted_down'] = mwh_reduced
+            hourly_df.loc[(hourly_df['unit_id'] == unit['unit_id']),'mwh_produced_base'] -= mwh_reduced
             if (mwh_reduced == unit_production):
                 hourly_df.loc[(hourly_df['unit_id'] == unit['unit_id']),'activated'] = 0
             excess -= mwh_reduced
@@ -201,8 +200,8 @@ def determine_active_units(r, h, bids_df, demands_df, hourly_df, portfolios_df):
                     .format(unit['unit_id'], unit['bid_base'], unit['bid_down'], mwh_reduced, (unit_production - mwh_reduced), excess))
 
         # ACTIVATE north plants
-        # filter for inactive plants in the north
-        inactive_north_df = hourly_df.loc[(hourly_df['unit_location'] == "North") & (hourly_df['activated'] == 0)]
+        # filter for not-fully-active plants in the north
+        inactive_north_df = hourly_df.loc[(hourly_df['unit_location'] == "North") & (hourly_df['mwh_produced_initially'] < hourly_df['unit_capacity'])]
         # sort by up adjustment bid (descending), initial bid (ascending), then unit id (ascending)
         inactive_north_df = inactive_north_df.sort_values(by=['bid_up', 'bid_base', 'unit_id'], ascending=[False, True, True])
 
@@ -210,19 +209,17 @@ def determine_active_units(r, h, bids_df, demands_df, hourly_df, portfolios_df):
         
         for _, unit in inactive_north_df.iterrows(): # HACK : antipattern
             unit_capacity = unit['unit_capacity']
+            mwh_produced_initially = unit['mwh_produced_initially']
             # Ramp up until deficit is resolved or unit is at max capacity
-            mwh_increased = min(abs(unit_capacity), deficit)
-            # Edit hourly_df to reflect update
-            hourly_df.loc[(hourly_df['unit_id'] == unit['unit_id']),'mwh_produced'] += mwh_increased
+            mwh_increased = min(abs(unit_capacity - mwh_produced_initially), deficit)
+            # Log increased production
+            hourly_df.loc[(hourly_df['unit_id'] == unit['unit_id']),'mwh_adjusted_up'] = mwh_increased
             if (mwh_increased > 0):
                 hourly_df.loc[(hourly_df['unit_id'] == unit['unit_id']),'activated'] = 1
-                # record CAISO-met bid minus paid upwards adjustment bid = price received for that electricity
-                hourly_df.loc[(hourly_df['unit_id'] == unit['unit_id']),'price'] = unit['bid_base'] - unit['bid_up']
             deficit -= mwh_increased
-            print("Increased unit {} (base: {}, down: {}) production by {} MWh to {} MWh at price ${}. Remaining deficit: {}"
-                    .format(unit['unit_id'], mwh_increased, unit['bid_base'], unit['bid_down'],
-                    (hourly_df.loc[(hourly_df['unit_id'] == unit['unit_id']),'mwh_produced'].values.item()), 
-                    (unit['bid_base'] - unit['bid_up']), deficit))
+            print("Increased unit {} (base: {}, up: {}) production by {} MWh to {} MWh at price ${}. Remaining deficit: {}"
+                    .format(unit['unit_id'], unit['bid_base'], unit['bid_up'], mwh_increased,
+                    (mwh_produced_initially + mwh_increased),(unit['bid_base'] - unit['bid_up']), deficit))
 
     return hourly_df
 
@@ -242,42 +239,49 @@ def run_initial_activation(r, h, demands_df, hourly_df):
     running_production = 0
     activation_record = []
     production_record = []
-    price = 0
+    base_price = 0
 
     for _, unit in hourly_df.iterrows(): # HACK this is an antipattern
         unit_capacity = unit['unit_capacity']
         remaining_demand = net_demand - running_production
-        mwh_produced = min(abs(unit_capacity), remaining_demand) 
+        mwh_produced_initially = min(abs(unit_capacity), remaining_demand) 
                         # maybe python can optimize better if it knows capacity is positive?
-        running_production += mwh_produced
-        remaining_demand -= mwh_produced
+        running_production += mwh_produced_initially
+        remaining_demand -= mwh_produced_initially
 
-        if (mwh_produced == 0):
+        if (mwh_produced_initially == 0):
             activation_record.append(0)
         else:
             activation_record.append(1)
             if (remaining_demand == 0):
-                price = unit['bid_base']
-        production_record.append(mwh_produced)
+                base_price = unit['bid_base']
+        production_record.append(mwh_produced_initially)
         print("Unit {} (bid {}) produced {} MWh. Running production: {}. Remaining demand: {}"
-                .format(unit['unit_id'], unit['bid_base'], mwh_produced, running_production, remaining_demand))
+                .format(unit['unit_id'], unit['bid_base'], mwh_produced_initially, running_production, remaining_demand))
         
     # To avoid mutating something while iterating over it, we store the production of each plant in an array.
     # Only after we're done iterating do we write to the hourly dataframe.
     # This seems scuffed
-    hourly_df['activated']    = pd.Series(activation_record, index=hourly_df.index[:len(activation_record)])
-    hourly_df['mwh_produced'] = round(pd.Series(production_record, index=hourly_df.index[:len(production_record)]), 2)
-    hourly_df['price']        = round(price, 2)
+    hourly_df['base_price'] = base_price
+    hourly_df['activated'] = pd.Series(activation_record, index=hourly_df.index[:len(activation_record)])
+    hourly_df['mwh_produced_initially'] = round(pd.Series(production_record, index=hourly_df.index[:len(production_record)]), 2)
+    hourly_df['mwh_produced_base'] = round(pd.Series(production_record, index=hourly_df.index[:len(production_record)]), 2)
 
     return hourly_df
 
 def complete_hourly_sheet(hourly_df, last_hour):
+    # mwh_produced
+    mwh_record = []
     # carbon_produced
     carbon_record = []
+    # base_revenue
+    base_revenue_record = []
+    # adjust_down_revenue
+    adjust_down_rev_record = []
+    # adjust_up_revenue
+    adjust_up_rev_record = []
     # revenue
     revenue_record = []
-    # adjust_down_revenue
-    adjust_rev_record = []
     # cost_var
     cost_var_record = []
     # cost_om
@@ -286,26 +290,41 @@ def complete_hourly_sheet(hourly_df, last_hour):
     profit_record = []
 
     for _, unit in hourly_df.iterrows(): # HACK : you need to learn how to avoid this
-        # bid_down,cost_per_mwh,cost_daily_om,carbon_per_mwh,mwh_produced,mwh_adjusted_down,price
-        mwh = unit['mwh_produced']
-        (bid_down,cost_per_mwh,cost_daily_om,
-         carbon_per_mwh,mwh_adjusted_down,price) = unit[['bid_down','cost_per_mwh','cost_daily_om',
-                                                         'carbon_per_mwh','mwh_adjusted_down','price']]
-        carbon_record.append(mwh * carbon_per_mwh)
-        revenue_record.append(mwh * price)
-        adjust_rev_record.append(mwh_adjusted_down * bid_down)
-        cost_var_record.append(mwh * cost_per_mwh)
+        (cost_per_mwh,cost_daily_om,carbon_per_mwh,base_price,
+        bid_base,bid_up,bid_down,mwh_produced_initially,
+        mwh_produced_base,mwh_adjusted_down,mwh_adjusted_up) = unit[['cost_per_mwh','cost_daily_om','carbon_per_mwh',
+                                                                    'base_price','bid_base','bid_up','bid_down',
+                                                                    'mwh_produced_initially','mwh_produced_base',
+                                                                    'mwh_adjusted_down','mwh_adjusted_up']]
+        
+        mwh_produced = mwh_produced_initially - mwh_adjusted_down + mwh_adjusted_up
+        # Assuming uniform auction
+        revenue = mwh_produced_base * base_price + mwh_adjusted_down * bid_down + mwh_adjusted_up * (bid_base - bid_up)
+        cost_var = mwh_produced * cost_per_mwh
         if last_hour:
             cost_om = cost_daily_om
         else:
             cost_om = 0
-        cost_om_record.append(cost_om)
-        profit_record.append(mwh * price + mwh_adjusted_down * bid_down - mwh * cost_per_mwh - cost_om)
+        cost = cost_var + cost_om
+        profit = revenue - cost
 
-    # carbon_produced,revenue,adjust_down_revenue,cost_var,cost_om,profit
+        mwh_record.append(mwh_produced)
+        carbon_record.append(mwh_produced * carbon_per_mwh)
+        base_revenue_record.append(mwh_produced_base * base_price) # Assuming uniform auction
+        adjust_down_rev_record.append(mwh_adjusted_down * bid_down)
+        adjust_up_rev_record.append(mwh_adjusted_up * (bid_base - bid_up))
+        revenue_record.append(revenue)
+        cost_var_record.append(cost_var)
+        cost_om_record.append(cost_om)
+        profit_record.append(profit)
+
+    # mwh_produced,carbon_produced,base_revenue,adjust_down_revenue,adjust_up_revenue,revenue,cost_var,cost_om,profit
+    hourly_df['mwh_produced']        = pd.Series(mwh_record, index=hourly_df.index[:len(mwh_record)])
     hourly_df['carbon_produced']     = pd.Series(carbon_record, index=hourly_df.index[:len(carbon_record)])
+    hourly_df['base_revenue']        = pd.Series(base_revenue_record, index=hourly_df.index[:len(base_revenue_record)])
+    hourly_df['adjust_down_revenue'] = pd.Series(adjust_down_rev_record, index=hourly_df.index[:len(adjust_down_rev_record)])
+    hourly_df['adjust_up_revenue']   = pd.Series(adjust_up_rev_record, index=hourly_df.index[:len(adjust_up_rev_record)])
     hourly_df['revenue']             = pd.Series(revenue_record, index=hourly_df.index[:len(revenue_record)])
-    hourly_df['adjust_down_revenue'] = pd.Series(adjust_rev_record, index=hourly_df.index[:len(adjust_rev_record)])
     hourly_df['cost_var']            = pd.Series(cost_var_record, index=hourly_df.index[:len(cost_var_record)])
     hourly_df['cost_om']             = pd.Series(cost_om_record, index=hourly_df.index[:len(cost_om_record)])
     hourly_df['profit']              = pd.Series(profit_record, index=hourly_df.index[:len(profit_record)])
@@ -353,7 +372,7 @@ def update_summary(r, h, summary_df, users_df):
     for portfolio_id in portfolio_ids:
         portfolio_df = hourly_df.loc[hourly_df['portfolio_id'] == portfolio_id]
 
-        revenues = portfolio_df['revenue'].sum() + portfolio_df['adjust_down_revenue'].sum()
+        revenues = portfolio_df['revenue'].sum()
         costs = portfolio_df['cost_var'].sum() + portfolio_df['cost_om'].sum()
         profits = portfolio_df['profit'].sum()
 
@@ -407,23 +426,24 @@ create_hourly_sheets(demands_df, portfolios_df)
 summary_df = pd.read_csv('csv/summary.csv')
 bids_df = pd.read_csv('csv/bids.csv')
 
-# run_hour(1, 1, bids_df)
-# print("Hour 1 run; updating summary")
-# update_summary(1, 1, summary_df, users_df)
+run_hour(1, 1, bids_df)
+print("Hour 1 run; updating summary")
+update_summary(1, 1, summary_df, users_df)
 
 run_hour(1, 2, bids_df)
 print("Hour 2 run; updating summary")
 update_summary(1, 2, summary_df, users_df)
 
-# run_hour(1, 3, bids_df)
-# print("Hour 3 run; updating summary")
-# update_summary(1, 3, summary_df, users_df)
+run_hour(1, 3, bids_df)
+print("Hour 3 run; updating summary")
+update_summary(1, 3, summary_df, users_df)
 
-# run_hour(1, 4, bids_df)
-# print("Hour 4 run; updating summary")
-# update_summary(1, 4, summary_df, users_df)
+run_hour(1, 4, bids_df)
+print("Hour 4 run; updating summary")
+update_summary(1, 4, summary_df, users_df)
 
 
 
 # TODO : Fix decimal inconsistencies
-
+# TODO : Design csv imports consistently — 
+#   when should csvs be read? Which functions should take in dataframes, and which should read from /csv/?
