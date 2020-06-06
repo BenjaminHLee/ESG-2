@@ -61,6 +61,7 @@ The PLAYER VIEW will consist of:
     | Day 3 hour 2: [        ]  [        ]  [        ]  [        ]     [        ]       [        ]
     | ...
     ```
+    (Note that there is a single upwards adjustment bid across all units for any given hour; this is according to the game specification, but not a constraint of the backend logic. The engine supports unit-specific adjustment bids.)
 
 The ADMIN VIEW will consist of:
 - A means through which the admin can read the data in the `summary.csv` file, the past charts, the past hourly spreadsheets, the bids spreadsheet, and the config spreadsheets.
