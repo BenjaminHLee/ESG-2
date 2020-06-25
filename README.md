@@ -8,7 +8,7 @@ This text specifies this implementation of the Electricity Strategy Game 2 ("ESG
 
 ### DATA
 
-The program is centered around a set of .csv files. `{value}` denotes a header that will be filled dynamically on the creation of the spreadsheet. Why spreadsheets? This is to make the data and results more accessible to players who will most likely be using spreadsheet programs to perform their own calculations and determine their strategies. 
+The program is centered around a set of .csv files. `{value}` denotes a header that will be filled dynamically on the creation of the spreadsheet. Why spreadsheets? This is to make the data and results more accessible to the players who, in past games, used spreadsheet programs to perform their own calculations and determine their strategies. 
 
 #### CONFIG SPREADSHEETS:
 Initial program setup. This does not change during the game.
