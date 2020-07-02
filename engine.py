@@ -120,6 +120,10 @@ def determine_active_units(r, h, bids_df, demands_df, hourly_df, portfolios_df):
     north_demand = demands_df.loc[(demands_df['round'] == r) & (demands_df['hour'] == h)]['north'].values.item()
     south_demand = demands_df.loc[(demands_df['round'] == r) & (demands_df['hour'] == h)]['south'].values.item()
 
+    # Get interzone transmission capacities
+    n_to_s_capacity = demands_df.loc[(demands_df['round'] == r) & (demands_df['hour'] == h)]['n_to_s_capacity'].values.item()
+    s_to_n_capacity = demands_df.loc[(demands_df['round'] == r) & (demands_df['hour'] == h)]['s_to_n_capacity'].values.item()
+
     print("North prod: {} / North demand: {}".format(north_production, north_demand))
     print("South prod: {} / South demand: {}".format(south_production, south_demand))
 
@@ -417,8 +421,6 @@ users_df = pd.read_csv('csv/config/users.csv')
 demands_df = demands_df.sort_values(by=['round', 'hour'], ascending=[True, True])
 users_df = users_df.sort_values(by=['portfolio_id'], ascending=[True])
 
-n_to_s_capacity = 2500
-s_to_n_capacity = 5000
 
 create_summary_sheet(demands_df, users_df)
 create_hourly_sheets(demands_df, portfolios_df)
