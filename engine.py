@@ -123,10 +123,10 @@ def determine_active_units(r, h, bids_df, demands_df, hourly_df, portfolios_df):
     print("North prod: {} / North demand: {}".format(north_production, north_demand))
     print("South prod: {} / South demand: {}".format(south_production, south_demand))
 
-    if (north_production - north_demand <= 2500 and south_production - south_demand <= 5000):
+    if (north_production - north_demand <= n_to_s_capacity and south_production - south_demand <= s_to_n_capacity):
         # then transmission resolves it and we're fine
         print("No adjustment necessary.")
-    elif (north_production - north_demand >= 2500):
+    elif (north_production - north_demand >= n_to_s_capacity):
         print("North overproducing.")
         # north has a surplus, south has a deficit
         # DEACTIVATE north plants
@@ -135,7 +135,7 @@ def determine_active_units(r, h, bids_df, demands_df, hourly_df, portfolios_df):
         # sort by down adjustment bid (ascending), then initial bid (descending), then unit id (descending)
         active_north_df = active_north_df.sort_values(by=['bid_down', 'bid_base', 'unit_id'], ascending=[True, False, False])
 
-        excess = north_production - north_demand - 2500 # 2500 can go to the south
+        excess = north_production - north_demand - n_to_s_capacity # n_to_s_capacity MWh can go to the south
         print("North excess: {}".format(excess))
 
         for _, unit in active_north_df.iterrows(): # HACK : iterrows is an antipattern
@@ -157,7 +157,7 @@ def determine_active_units(r, h, bids_df, demands_df, hourly_df, portfolios_df):
         # sort by up adjustment bid (descending), initial bid (ascending), then unit id (ascending)
         inactive_south_df = inactive_south_df.sort_values(by=['bid_up', 'bid_base', 'unit_id'], ascending=[False, True, True])
 
-        deficit = south_demand - south_production - 2500 # 2500 from north
+        deficit = south_demand - south_production - n_to_s_capacity # n_to_s_capacity MWh from north
         
         for _, unit in inactive_south_df.iterrows(): # HACK : antipattern
             unit_capacity = unit['unit_capacity']
@@ -174,7 +174,7 @@ def determine_active_units(r, h, bids_df, demands_df, hourly_df, portfolios_df):
                     (mwh_produced_initially + mwh_increased),(unit['bid_base'] - unit['bid_up']), deficit))
 
 
-    elif (south_production - south_demand >= 5000):
+    elif (south_production - south_demand >= s_to_n_capacity):
         print("South overproducing.")
         # north has a deficit, south has a surplus
         # DEACTIVATE south plants
@@ -183,7 +183,7 @@ def determine_active_units(r, h, bids_df, demands_df, hourly_df, portfolios_df):
         # sort by down adjustment bid (ascending), then initial bid (descending), then unit id (descending)
         active_south_df = active_south_df.sort_values(by=['bid_down', 'bid_base', 'unit_id'], ascending=[True, False, False])
 
-        excess = south_production - south_demand - 5000 # 5000 can go to the north
+        excess = south_production - south_demand - s_to_n_capacity # s_to_n_capacity MWh can go to the north
         print("South excess: {}".format(excess))
 
         for _, unit in active_south_df.iterrows(): # HACK : antipattern
@@ -205,7 +205,7 @@ def determine_active_units(r, h, bids_df, demands_df, hourly_df, portfolios_df):
         # sort by up adjustment bid (descending), initial bid (ascending), then unit id (ascending)
         inactive_north_df = inactive_north_df.sort_values(by=['bid_up', 'bid_base', 'unit_id'], ascending=[False, True, True])
 
-        deficit = north_demand - north_production - 5000 # 2500 from south
+        deficit = north_demand - north_production - s_to_n_capacity # s_to_n_capacity MWh from south
         
         for _, unit in inactive_north_df.iterrows(): # HACK : antipattern
             unit_capacity = unit['unit_capacity']
@@ -353,8 +353,6 @@ def run_hour(r, h, bids_df):
 
     hourly_df.to_csv('csv/hourly/round_' + str(r) + '_hour_' + str(h) + '.csv',index=False) 
 
-#TODO: Implement update_summary
-
 
 # SUMMARY SPREADSHEET:
 # Captures a macroscopic summary of performance over hours.
@@ -419,6 +417,8 @@ users_df = pd.read_csv('csv/config/users.csv')
 demands_df = demands_df.sort_values(by=['round', 'hour'], ascending=[True, True])
 users_df = users_df.sort_values(by=['portfolio_id'], ascending=[True])
 
+n_to_s_capacity = 2500
+s_to_n_capacity = 5000
 
 create_summary_sheet(demands_df, users_df)
 create_hourly_sheets(demands_df, portfolios_df)
