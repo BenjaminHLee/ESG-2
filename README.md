@@ -12,7 +12,7 @@ The program is centered around a set of .csv files. `{value}` denotes a header t
 
 #### CONFIG SPREADSHEETS:
 Initial program setup. This does not change during the game.
-- `demand` : `round,hour,north,south,net` : demand in mwh for each hour of each round.
+- `schedule` : `round,hour,n_to_s_capacity,s_to_n_capacity,north,south,net` : game conditions for each hour of each round.
 - `portfolios` : `portfolio_id,portfolio_name,unit_id,unit_name,unit_location,unit_capacity, cost_per_mwh,cost_daily_om,carbon_per_mwh` : unit info for each unit in each portfolio.
 - `users` : `player_name,portfolio_owned,portfolio_id,starting_money,password` : initial player account setup, to be configured based on results from auction.
 
@@ -28,13 +28,13 @@ A set of spreadsheets (one per hour) recording bids, production, and revenue/cos
 
 #### CURRENT BID SPREADSHEET:
 
-Records bids for all hours as submitted by players. Constantly updating according to player form inputs. Not visible to players, only administrators. When an hour is run, the bids in this spreadsheet are recorded in the corresponding `round_#_hour_#`.csv file.
+Records bids for all hours as submitted by players. Constantly updating according to player form inputs. Not visible to players, only administrators. When an hour is run, the bids in this spreadsheet are recorded in the corresponding `round_#_hour_#.csv` file.
 
 - `bids` : `portfolio_id,portfolio_name,unit_id,unit_name,[bid_base_{round}_{hour},bid_up_{round}_{hour},bid_down_{round}_{hour}]` : The square brackets indicate that these columns are to be repeated dynamically based on the number of rounds and hours. Note that this structure enables unit-specific adjustment bids; whether or not players can specify those values is at the discretion of the bid form creator. 
 
 ### PROGRAM FLOW
 
-Before running the game, the administrator provides the `demand.csv`, `portfolios.csv`, and `users.csv` files. This defines the number of rounds, number of players, portfolio contents, unit attributes, starting balances (based off of portfolio auction results), and hourly demand conditions. This also defines player login credentials. Yes, the notion of security is foreign and the concept of a hash function unfamiliar. (Players should understand that this game is not a technical exercise.)
+Before running the game, the administrator provides the `schedule.csv`, `portfolios.csv`, and `users.csv` files. This defines the number of rounds, number of players, portfolio contents, unit attributes, starting balances (based off of portfolio auction results), and hourly game conditions. This also defines player login credentials. Yes, the notion of security is foreign and the concept of a hash function unfamiliar. (Players should understand that this game is not a technical exercise.)
 
 All of the .csv files are created at the start of the game — this means that all of the spreadsheets exist for the entirety of the game. Spreadsheet data is never overwritten, except at the discretion of the game administrator. As such, reviewing prior states/reverting to a prior state is fairly painless.
 
@@ -44,7 +44,7 @@ At any point in time, the game will be in one of two states: in a round or over.
 
 Players submit bids. This updates the bids spreadsheet.
 
-The administrator runs the hour. This takes in the hour's demand (from demand.csv) and the player bids (from the current `bids.csv` file), and determines which units will activate at which price. See "ACTIVATING UNITS" for specific information on how this is determined, including adjustment. This information is used to update the current `round_#_hour_#.csv` file as well as the `summary.csv` file. The information is also used to draw three charts representing the net market, the south market, the north market, and the adjustments made. The hour is then advanced.
+The administrator runs the hour. This takes in the hour's parameters (from `schedule.csv`) and the player bids (from the current `bids.csv` file), and determines which units will activate at which price. See "ACTIVATING UNITS" for specific information on how this is determined, including adjustment. This information is used to update the current `round_#_hour_#.csv` file as well as the `summary.csv` file. The information is also used to draw three charts representing the net market, the south market, the north market, and the adjustments made. The hour is then advanced.
 
 The PLAYER VIEW will consist of:
 - A means through which the player can read the data in the `summary.csv` file, the past charts, and the past hourly spreadsheets
@@ -71,7 +71,7 @@ The ADMIN VIEW will consist of:
 
 #### GAME OVER
 
-When the current round/hour is equal to the last round/hour in the demand.csv spreadsheet, running the hour will compute the hour and then advance the hour. As there will not be a specified demand for this new hour, the administrator will not be able to run the hour. Additionally, the player-side bidding form will be empty, as there will be no future bids to specify. This has the effect of ending the game. 
+When the current round/hour is equal to the last round/hour in the `schedule.csv` spreadsheet, running the hour will compute the hour and then advance the hour. As there will not be a specified demand for this new hour, the administrator will not be able to run the hour. Additionally, the player-side bidding form will be empty, as there will be no future bids to specify. This has the effect of ending the game. 
 
 #### ACTIVATING UNITS
 

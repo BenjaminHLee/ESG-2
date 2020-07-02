@@ -11,7 +11,7 @@ import pandas as pd
 #     [player_{player_id}_revenue,player_{player_id}_cost,player_{player_id}_profit],
 #     [player_{player_id}_balance] 
 
-def create_summary_sheet(demands_df, users_df):
+def create_summary_sheet(schedule_df, users_df):
     user_ids = users_df['portfolio_id'].tolist()
 
     # lambda functions for the header-generating list comprehension
@@ -29,7 +29,7 @@ def create_summary_sheet(demands_df, users_df):
     # important to load from the True summary.csv file whenever the data is needed, instead of a potentially out-of-
     # date summary_df variable. Whenever possible, functions should interact indirectly through writing to summary.csv
     # and then reading summary.csv, instead of chaining functions directly.
-    summary_df = pd.concat([demands_df, pd.DataFrame(columns=(summary_player_headers))], axis=1)
+    summary_df = pd.concat([schedule_df, pd.DataFrame(columns=(summary_player_headers))], axis=1)
 
     # summary.csv is saved in the /csv/ directory.
     summary_df.to_csv('csv/summary.csv', index=False)
@@ -43,9 +43,9 @@ def create_summary_sheet(demands_df, users_df):
 #     activated,mwh_produced_initially,mwh_produced_base,mwh_adjusted_down,mwh_adjusted_up,mwh_produced,
 #     carbon_produced,base_revenue,adjust_down_revenue,adjust_up_revenue,revenue,cost_var,cost_om,profit 
 
-def create_hourly_sheets(demands_df, portfolios_df):
+def create_hourly_sheets(schedule_df, portfolios_df):
     # a list of (round, hour) pairs, for the purpose of naming each sheet
-    round_hour_tuples = list(demands_df[['round', 'hour']].itertuples(index=False, name=None))
+    round_hour_tuples = list(schedule_df[['round', 'hour']].itertuples(index=False, name=None))
 
     hourly_additional_headers = ['bid_base','bid_up','bid_down','base_price','activated','mwh_produced_initially',
                                  'mwh_produced_base','mwh_adjusted_down','mwh_adjusted_up','mwh_produced',
@@ -66,9 +66,9 @@ def create_hourly_sheets(demands_df, portfolios_df):
 #     number of rounds and hours. Note that this structure enables unit-specific adjustment bids; 
 #     whether or not players can specify those values is at the discretion of the bid form creator. 
 
-def create_bids_sheet(demands_df, portfolios_df):
+def create_bids_sheet(schedule_df, portfolios_df):
     # a list of (round, hour) pairs, for the purpose of naming the repeated columns
-    round_hour_tuples = list(demands_df[['round', 'hour']].itertuples(index=False, name=None))
+    round_hour_tuples = list(schedule_df[['round', 'hour']].itertuples(index=False, name=None))
 
     # the part of portfolios_df that is used to construct bids_df
     portfolios_headers = ['portfolio_id','portfolio_name','unit_id','unit_name']
@@ -87,12 +87,7 @@ def create_bids_sheet(demands_df, portfolios_df):
     bids_df.to_csv('csv/bids.csv',index=False)
 
 
-# create_summary_sheet(demands_df, users_df)
-# create_hourly_sheets(demands_df, portfolios_df)
-# create_bids_sheet(demands_df, portfolios_df)
-
-
-def determine_active_units(r, h, bids_df, demands_df, hourly_df, portfolios_df):
+def determine_active_units(r, h, bids_df, schedule_df, hourly_df, portfolios_df):
     # Read bids from bids_df into hourly_df
     hourly_df['bid_base'] = bids_df[('bid_base_' + str(r) + '_' + str(h))]
     hourly_df['bid_up']   = bids_df[('bid_up_'   + str(r) + '_' + str(h))]
@@ -102,11 +97,11 @@ def determine_active_units(r, h, bids_df, demands_df, hourly_df, portfolios_df):
     # net_supply_curve = construct_net_supply_curve(hourly_df) TODO properly
 
     # Find intersection price, quantity
-    # (price, quantity) = intersect_supply_demand(r, h, demands_df, net_supply_curve) TODO properly
+    # (price, quantity) = intersect_supply_demand(r, h, schedule_df, net_supply_curve) TODO properly
 
     # Update hourly sheet with preliminary activations at price up unitl demand is fulfilled
     # This means that we're going to be 'working-in-place' on the hourly dataframe while running this function.
-    hourly_df = run_initial_activation(r, h, demands_df, hourly_df) # HACK only works because demand is perfectly inelastic
+    hourly_df = run_initial_activation(r, h, schedule_df, hourly_df) # HACK only works because demand is perfectly inelastic
 
     # Not all of the plants are going to be checked for adjustment down/up; initializing with 0's avoids later issues
     hourly_df['mwh_adjusted_down'] = 0
@@ -117,12 +112,12 @@ def determine_active_units(r, h, bids_df, demands_df, hourly_df, portfolios_df):
     south_production = hourly_df.loc[(hourly_df['unit_location'] == "South")]['mwh_produced_initially'].sum()
 
     # Compare to zone specific demand
-    north_demand = demands_df.loc[(demands_df['round'] == r) & (demands_df['hour'] == h)]['north'].values.item()
-    south_demand = demands_df.loc[(demands_df['round'] == r) & (demands_df['hour'] == h)]['south'].values.item()
+    north_demand = schedule_df.loc[(schedule_df['round'] == r) & (schedule_df['hour'] == h)]['north'].values.item()
+    south_demand = schedule_df.loc[(schedule_df['round'] == r) & (schedule_df['hour'] == h)]['south'].values.item()
 
     # Get interzone transmission capacities
-    n_to_s_capacity = demands_df.loc[(demands_df['round'] == r) & (demands_df['hour'] == h)]['n_to_s_capacity'].values.item()
-    s_to_n_capacity = demands_df.loc[(demands_df['round'] == r) & (demands_df['hour'] == h)]['s_to_n_capacity'].values.item()
+    n_to_s_capacity = schedule_df.loc[(schedule_df['round'] == r) & (schedule_df['hour'] == h)]['n_to_s_capacity'].values.item()
+    s_to_n_capacity = schedule_df.loc[(schedule_df['round'] == r) & (schedule_df['hour'] == h)]['s_to_n_capacity'].values.item()
 
     print("North prod: {} / North demand: {}".format(north_production, north_demand))
     print("South prod: {} / South demand: {}".format(south_production, south_demand))
@@ -231,9 +226,9 @@ def determine_active_units(r, h, bids_df, demands_df, hourly_df, portfolios_df):
 #     first  = lambda x: x[0]
 #     second = lambda x: x[1]
 
-def run_initial_activation(r, h, demands_df, hourly_df):
+def run_initial_activation(r, h, schedule_df, hourly_df):
     # HACK only works because demand is perfectly inelastic
-    net_demand = demands_df.loc[(demands_df['round'] == r) & (demands_df['hour'] == h)]['net'].values.item()
+    net_demand = schedule_df.loc[(schedule_df['round'] == r) & (schedule_df['hour'] == h)]['net'].values.item()
 
     print("Calculating net curve")
     print("Net demand: {}".format(net_demand))
@@ -347,7 +342,7 @@ def run_hour(r, h, bids_df):
     hourly_df = pd.read_csv('csv/hourly/round_' + str(r) + '_hour_' + str(h) + '.csv')
 
     # determine active units
-    hourly_df = determine_active_units(r, h, bids_df, demands_df, hourly_df, portfolios_df)
+    hourly_df = determine_active_units(r, h, bids_df, schedule_df, hourly_df, portfolios_df)
 
     # check if it's the last hour of the round
     last = last_hour(r, h)
@@ -414,16 +409,16 @@ def update_summary(r, h, summary_df, users_df):
 
 
 # read CONFIG SPREADSHEETS from /csv/config files
-demands_df = pd.read_csv('csv/config/demands.csv')
+schedule_df = pd.read_csv('csv/config/schedule.csv')
 portfolios_df = pd.read_csv('csv/config/portfolios.csv')
 users_df = pd.read_csv('csv/config/users.csv')
 
-demands_df = demands_df.sort_values(by=['round', 'hour'], ascending=[True, True])
+schedule_df = schedule_df.sort_values(by=['round', 'hour'], ascending=[True, True])
 users_df = users_df.sort_values(by=['portfolio_id'], ascending=[True])
 
 
-create_summary_sheet(demands_df, users_df)
-create_hourly_sheets(demands_df, portfolios_df)
+create_summary_sheet(schedule_df, users_df)
+create_hourly_sheets(schedule_df, portfolios_df)
 
 summary_df = pd.read_csv('csv/summary.csv')
 bids_df = pd.read_csv('csv/bids.csv')
