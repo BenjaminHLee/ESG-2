@@ -449,12 +449,16 @@ def update_summary(r, h, summary_df, users_df):
         balance = 0
 
         if (summary_df.loc[(summary_df['round'] == r) & (summary_df['hour'] == h)].index.values.astype(int)[0] == 0):
-            # if the round/hour row is at the top of the table, factor in starting money from users_df
-            balance = users_df.loc[(users_df['portfolio_id'] == portfolio_id),'starting_money'].values.astype(int)[0] + profits
+            # if round/hour row is at the top of the table, factor in starting money from users_df (multiplied by interest rate)
+            balance = ((1 + daily_interest_rate) * 
+                       users_df.loc[(users_df['portfolio_id'] == portfolio_id),'starting_money'].values.astype(int)[0]) + profits
         else:
-            # otherwise, look at the value above and add profits
+            # otherwise, look at the value above and add profits (multiplied by interest rate)
             current_row_index = summary_df.loc[(summary_df['round'] == r) & (summary_df['hour'] == h)].index.values.astype(int)[0]
-            balance = summary_df.iloc[current_row_index - 1][balance_header] + profits 
+            if (h == 1):
+                balance = (1 + daily_interest_rate) * summary_df.iloc[current_row_index - 1][balance_header] + profits 
+            else:
+                balance = summary_df.iloc[current_row_index - 1][balance_header] + profits 
 
         name = portfolio_df['portfolio_name'].iloc[0] 
         # TODO : the portfolio_id,portfolio_name repitition in portfolios.csv is a SPoT violation; rethink structure 
@@ -474,6 +478,7 @@ users_df = pd.read_csv('csv/config/users.csv')
 schedule_df = schedule_df.sort_values(by=['round', 'hour'], ascending=[True, True])
 users_df = users_df.sort_values(by=['portfolio_id'], ascending=[True])
 
+daily_interest_rate = 0.00
 
 create_summary_sheet(schedule_df, users_df)
 create_hourly_sheets(schedule_df, portfolios_df)
