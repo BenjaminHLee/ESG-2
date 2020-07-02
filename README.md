@@ -1,6 +1,11 @@
 # ESG-2
 Prototype implementation of Electricity Strategy Game v2 based off of rules by Vassallo et al.
 
+## STATUS
+
+Backend: match/surpass ESG 1; fulfills ESG 2 reqs
+Frontend: in progress
+
 
 ## PROGRAM EXPLANATION
 
