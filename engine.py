@@ -381,9 +381,9 @@ def update_summary(r, h, summary_df, users_df):
         profit_header  = prefix + "profit"
         balance_header = prefix + "balance"
 
-        summary_df.loc[(summary_df['round'] == r) & (summary_df['hour'] == h),revenue_header] = revenues
-        summary_df.loc[(summary_df['round'] == r) & (summary_df['hour'] == h),cost_header]    = costs
-        summary_df.loc[(summary_df['round'] == r) & (summary_df['hour'] == h),profit_header]  = profits
+        summary_df.loc[(summary_df['round'] == r) & (summary_df['hour'] == h),revenue_header] = round(revenues, 2)
+        summary_df.loc[(summary_df['round'] == r) & (summary_df['hour'] == h),cost_header]    = round(costs, 2)
+        summary_df.loc[(summary_df['round'] == r) & (summary_df['hour'] == h),profit_header]  = round(profits, 2)
 
         # update balance: 
         # If it's the first round first hour, then be sure to factor in initial balance, 
@@ -404,7 +404,7 @@ def update_summary(r, h, summary_df, users_df):
         print("{} Current balance: ${:0.2f} Revenue: ${:0.2f} Cost: ${:0.2f} Profit: ${:0.2f}"
                 .format(name, balance, revenues, costs, profits))
 
-        summary_df.loc[(summary_df['round'] == r) & (summary_df['hour'] == h),balance_header] = balance
+        summary_df.loc[(summary_df['round'] == r) & (summary_df['hour'] == h),balance_header] = round(balance, 2)
 
     summary_df.to_csv('csv/summary.csv', index=False)
 
