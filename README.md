@@ -12,7 +12,7 @@ The program is centered around a set of .csv files. `{value}` denotes a header t
 
 #### CONFIG SPREADSHEETS:
 Initial program setup. This does not change during the game.
-- `schedule` : `round,hour,n_to_s_capacity,s_to_n_capacity,north,south,net` : game conditions for each hour of each round.
+- `schedule` : `round,hour,n_to_s_capacity,s_to_n_capacity,north,south,net,auction_type` : game conditions for each hour of each round.
 - `portfolios` : `portfolio_id,portfolio_name,unit_id,unit_name,unit_location,unit_capacity, cost_per_mwh,cost_daily_om,carbon_per_mwh` : unit info for each unit in each portfolio.
 - `users` : `player_name,portfolio_owned,portfolio_id,starting_money,password` : initial player account setup, to be configured based on results from auction.
 

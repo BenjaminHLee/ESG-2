@@ -227,41 +227,99 @@ def determine_active_units(r, h, bids_df, schedule_df, hourly_df, portfolios_df)
 #     second = lambda x: x[1]
 
 def run_initial_activation(r, h, schedule_df, hourly_df):
-    # HACK only works because demand is perfectly inelastic
-    net_demand = schedule_df.loc[(schedule_df['round'] == r) & (schedule_df['hour'] == h)]['net'].values.item()
+
+    # Assume supply curve is a step function and demand curve is downward-sloping and linear. 
+    # The supply curve is provided by hourly_df; the demand curve is constructed from schedule_df.
+
+    # First sort the hourly_df (includes plants and bids info) by base bid.
+    # Then iterate through the list:
+        # Check current production. Use demand curve to find price. If price is less than bid_base, then this unit
+        # will not produce (as its electricity is too expensive for the market). If price is less than bid_base, then
+        # the unit will produce partially. In this case, we hypothesize that the unit produces at full capacity, and
+        # then use the demand curve to find the price at the current production + full capacity of this unit. If the
+        # price is still above the unit's bid_base, then the unit is entirely below the demand curve, and thus produces.
+        # If not, we know (by the intermediate value theorem) that there must be an intersection of the supply and demand
+        # curves within this unit's segment of the step function. This is a simple system of linear equations.
+        # We determine how much the unit produces and increase current production accordingly.
+    # This process repeats until we have gone through the entire list.
+
+    # Get auction type:
+    auction_type = schedule_df.loc[(schedule_df['round'] == r) & (schedule_df['hour'] == h)]['auction_type'].values.item()
+    
+    demand_base = schedule_df.loc[(schedule_df['round'] == r) & (schedule_df['hour'] == h)]['net'].values.item()
+    demand_slope = schedule_df.loc[(schedule_df['round'] == r) & (schedule_df['hour'] == h)]['slope'].values.item()
+
+    if (demand_slope == 0): # NOTE: 0 slope is interpreted as perfect inelasticity, not perfect elasticity
+        def demand_fn(quantity):
+            if (quantity < demand_base): 
+                # quantity is insufficient, will pay any price (remember inelasticity!)
+                return np.inf # CONCERNING
+            else: 
+                # quantity is sufficient, will pay nothing
+                return -np.inf # WORRYING
+    else:
+        def demand_fn(quantity):
+            return (demand_slope * (quantity - demand_base)) # price-giving function in [slope * (x - x_intercept)] form
 
     print("Calculating net curve")
-    print("Net demand: {}".format(net_demand))
+    # print("Net demand: {}".format(net_demand))
 
     hourly_df = hourly_df.sort_values(by=['bid_base', 'unit_id'])
 
     running_production = 0
     activation_record = []
     production_record = []
-    base_price = 0
+    base_price_record = []
+    uniform_price = 0
 
     for _, unit in hourly_df.iterrows(): # HACK this is an antipattern
         unit_capacity = unit['unit_capacity']
-        remaining_demand = net_demand - running_production
-        mwh_produced_initially = min(abs(unit_capacity), remaining_demand) 
-                        # maybe python can optimize better if it knows capacity is positive?
-        running_production += mwh_produced_initially
-        remaining_demand -= mwh_produced_initially
+        bid = unit['bid_base'] 
+        unit_production = 0
 
-        if (mwh_produced_initially == 0):
+        if (demand_fn(running_production) < bid):
+            # unit's bid price is too high, market is not interested
+            unit_production = 0
             activation_record.append(0)
+            production_record.append(0)
+            base_price_record.append(bid)
         else:
+            # unit is getting activated to some extent
             activation_record.append(1)
-            if (remaining_demand == 0):
-                base_price = unit['bid_base']
-        production_record.append(mwh_produced_initially)
-        print("Unit {} (bid {}) produced {} MWh. Running production: {}. Remaining demand: {}"
-                .format(unit['unit_id'], unit['bid_base'], mwh_produced_initially, running_production, remaining_demand))
+            base_price_record.append(bid)
+            # check if unit produces entire capacity or if demand curve intersects production step
+            if (demand_fn(running_production + unit_capacity) > bid):
+                # step fits entirely below curve
+                unit_production = unit_capacity
+                production_record.append(unit_production)
+                running_production += unit_production
+            else:
+                # step intersects
+                # with nonzero slope:
+                intersect_quantity = 0
+                if (demand_slope != 0):
+                    # algebra gives quantity produced = bid/demand_slope + demand_base
+                    intersect_quantity = bid/demand_slope + demand_base
+                else:
+                    # vertical line
+                    intersect_quantity = demand_base
+                unit_production = intersect_quantity - running_production 
+                running_production += unit_production
+                production_record.append(unit_production)
+                # if it's a uniform auction, this unit determines the uniform price
+                uniform_price = bid
+
+        print("Unit {} (bid {}) produced {} MWh. Running production: {}."
+                .format(unit['unit_id'], unit['bid_base'], unit_production, running_production))
         
     # To avoid mutating something while iterating over it, we store the production of each plant in an array.
     # Only after we're done iterating do we write to the hourly dataframe.
     # This seems scuffed
-    hourly_df['base_price'] = base_price
+    if (auction_type == "discrete"):
+        hourly_df['base_price'] = pd.Series(base_price_record, index=hourly_df.index[:len(base_price_record)])
+    else:
+        # default to uniform
+        hourly_df['base_price'] = uniform_price
     hourly_df['activated'] = pd.Series(activation_record, index=hourly_df.index[:len(activation_record)])
     hourly_df['mwh_produced_initially'] = round(pd.Series(production_record, index=hourly_df.index[:len(production_record)]), 2)
     hourly_df['mwh_produced_base'] = round(pd.Series(production_record, index=hourly_df.index[:len(production_record)]), 2)
