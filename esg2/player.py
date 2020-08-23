@@ -17,11 +17,11 @@ bp = Blueprint('player', __name__, url_prefix='')
 @bp.route('/player/dashboard', methods=['GET', 'POST'])
 @login_required
 def player_dashboard():
+    
     try:
         portfolio_id = g.player['portfolio_id']
     except:
-        flash("Portfolio not found. Are you using the right account?")
-        return render_template('/player/dashboard.html', initialized=False)
+        return render_template('/player/dashboard.html', player_is_valid=False)
 
     # POST
     if request.method == 'POST':
@@ -84,6 +84,7 @@ def player_dashboard():
         pretty_headers = [bid_base_r_h_to_header(s) for s in base_bids_df.columns]
 
     kwargs = {
+        'player_is_valid':True,
         'initialized':True,
         'bids':name_base_bids_df,
         'adjustment':adjustment,

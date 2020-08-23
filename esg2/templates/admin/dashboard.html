@@ -10,7 +10,7 @@
   Runs the selected hour: bids for that hour are recorded, the hour's computations completed, 
   and the hourly sheet updated accordingly. The summary sheet is updated for that hour only; 
   changes do not propagate forwards (you must run the subsequent hours to do so).
-  <form method="POST" id="run-hour-form">
+  <form method="POST" id="run-hour-form" style="margin-top: 2rem;">
     <label for="hour-select">Select Hour</label>
     <select name="hour-select" id="hour-select">
       {% for hour in pretty_headers %}
