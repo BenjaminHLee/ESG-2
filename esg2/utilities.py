@@ -29,13 +29,13 @@ def get_portfolio_names_list():
 def get_initialized_portfolio_names_list():
     """Reads players and returns the list of portfolio names with an initialized player
     (i.e. the list of portfolios that are involved in the initialized game)"""
-    players_df = pd.read_csv(os.path.join(CONFIG_FOLDER, 'players.csv'))
+    players_df = pd.read_csv(os.path.join(CSV_FOLDER, 'players.csv'))
     names = players_df['portfolio'].unique()
     return names
 
 def get_initialized_portfolio_ids_list():
     """Reads players and returns the list of portfolio ids with an initialized player
     (i.e. the list of portfolios that are involved in the initialized game)"""
-    players_df = pd.read_csv(os.path.join(CONFIG_FOLDER, 'players.csv'))
+    players_df = pd.read_csv(os.path.join(CSV_FOLDER, 'players.csv'))
     names = players_df['portfolio_id'].unique()
     return names

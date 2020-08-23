@@ -172,7 +172,7 @@ def start_game():
         db
     )
     players_df = players_df.sort_values(by=['portfolio_id'], ascending=[True])
-    players_df.to_csv(os.path.join(CONFIG_FOLDER, 'players.csv'), index=False)
+    players_df.to_csv(os.path.join(CSV_FOLDER, 'players.csv'), index=False)
 
     # Create summary, hourly, bids sheets
     schedule_df = pd.read_csv(os.path.join(CONFIG_FOLDER, 'schedule.csv'))
@@ -197,7 +197,7 @@ def admin_dashboard():
     if request.method == 'POST':
         schedule_df = pd.read_csv(os.path.join(CONFIG_FOLDER, 'schedule.csv'))
         portfolios_df = pd.read_csv(os.path.join(CONFIG_FOLDER, 'portfolios.csv'))
-        players_df = pd.read_csv(os.path.join(CONFIG_FOLDER, 'players.csv'))
+        players_df = pd.read_csv(os.path.join(CSV_FOLDER, 'players.csv'))
         summary_df = pd.read_csv(os.path.join(CSV_FOLDER, 'summary.csv'))
 
         schedule_df = schedule_df.sort_values(by=['round', 'hour'], ascending=[True, True])
