@@ -5,7 +5,7 @@ from flask import (
 bp = Blueprint('error', __name__, url_prefix='')
 
 @bp.app_errorhandler(400)
-def forbidden(e):
+def bad_request(e):
     kwargs = {
         'error_title':"400",
         'error_text':"Bad request. Was an outdated form submitted?"
