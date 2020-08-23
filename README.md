@@ -1,5 +1,5 @@
 # ESG-2
-Okay so this readme is def wrong (at least wrt this branch) and needs to be updated significantly.
+Okay so the old readme is def wrong (at least wrt this branch) and needs to be updated significantly.
 
 Flask app is at MVP status. Supports ESG-1 and ESG-2 games. No pretty charts yet.
 
@@ -12,7 +12,6 @@ FEATURES:
 - Admin dashboard
 - Scoreboard
 - Player dashboard
-- Web error handling
 
 TODO:
 - Landing/about page
@@ -21,3 +20,5 @@ TODO:
 - Restyle code (consistently)
 - Improve logging
 - Pretty charts
+- Document config options
+- Add guide for building/deploying
