@@ -5,6 +5,7 @@
 {% endblock %}
 
 {% block content %}
+{% if initialized %}
   <div>
     <p><a href="{{ url_for('scoreboard.engine_file', filename='summary.csv') }}">summary.csv</a></p>
     <style>
@@ -47,4 +48,7 @@
       </div>  
     </div>
   </div>
+{% else %}
+The game has not yet been initialized. An administrator can initialize the game via their config panel.
+{% endif %}  
 {% endblock %}

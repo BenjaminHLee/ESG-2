@@ -23,10 +23,17 @@ def scoreboard():
         (headings, table) = create_summary_subtable(suffix)
         view_names = {"balance": "Balance", "revenue": "Revenue", "cost": "Losses", "profit": "Profit"}
         current_view_name = view_names.get(suffix, "")
-        return render_template('scoreboard.html', summary_table_headers=headings, summary_table=table, current_summary_view=current_view_name)
+        return render_template('scoreboard.html', initialized=True, summary_table_headers=headings, summary_table=table, current_summary_view=current_view_name)
+
+    db = get_db()
+    if db.execute(
+        '''SELECT name FROM sqlite_master WHERE type='table' AND name='bids' '''
+    ).fetchone() is None:
+        return render_template('scoreboard.html', initialized=False)
+
 
     (balances_heading, balances_table) = create_summary_subtable("balance")
-    return render_template('scoreboard.html', summary_table_headers=balances_heading, summary_table=balances_table, current_summary_view="Balance")
+    return render_template('scoreboard.html', initialized=True, summary_table_headers=balances_heading, summary_table=balances_table, current_summary_view="Balance")
 
 def create_summary_subtable(header_suffix):
     summary_df = pd.read_csv(CSV_FOLDER + '/summary.csv')
