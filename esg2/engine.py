@@ -301,6 +301,8 @@ def run_initial_activation(r, h, schedule_df, hourly_df):
             # unit is getting activated to some extent
             activation_record.append(1)
             base_price_record.append(bid)
+            # update uniform price (recall that list of bids is sorted)
+            uniform_price = bid
             # check if unit produces entire capacity or if demand curve intersects production step
             if (demand_fn(running_production + unit_capacity) > bid):
                 # step fits entirely below curve
@@ -320,8 +322,6 @@ def run_initial_activation(r, h, schedule_df, hourly_df):
                 unit_production = intersect_quantity - running_production 
                 running_production += unit_production
                 production_record.append(unit_production)
-                # if it's a uniform auction, this unit determines the uniform price
-                uniform_price = bid
 
         print("Unit {} (bid {}) produced {} MWh. Running production: {}."
                 .format(unit['unit_id'], unit['bid_base'], unit_production, running_production))
