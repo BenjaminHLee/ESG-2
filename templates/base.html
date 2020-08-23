@@ -1,0 +1,52 @@
+<!doctype html>
+<title>{% block title %}{% endblock %} - ESG-2</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/skeleton/2.0.4/skeleton.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+<script src="{{ url_for('static', filename='navbar.js') }}"></script>
+<meta http-equiv="X-Clacks-Overhead" content="GNU Terry Pratchett" />
+
+<div class="container">
+
+  <h2 class="esg-header short-esg">ESG</h2>
+  <h2 class="esg-header long-esg">the Electricity Strategy Game</h2>
+
+  <div class="navbar-spacer"></div>
+  <nav class="navbar">
+    <div class="container">
+      <ul class="navbar-list">
+        {% if g.user['usertype'] == "admin" %}
+          <li class="navbar-item"><a class="navbar-link" href="{{ url_for('scoreboard.scoreboard') }}">Scoreboard</a></li>
+          <li class="navbar-item"><a class="navbar-link" href="{{ url_for('admin.admin_dashboard') }}">Dashboard</a></li>
+          <li class="navbar-item"><a class="navbar-link" href="{{ url_for('admin.config') }}">Config</a></li>
+          <li class="navbar-item-right"><a class="navbar-link" href="{{ url_for('auth.logout') }}">Log Out</a></li>
+          <li class="navbar-item-right"><span class="navbar-link">{{ g.user['usertype'] }}</span></li>
+        {% elif g.user['usertype'] == "player" %}
+          <li class="navbar-item"><a class="navbar-link" href="{{ url_for('scoreboard.scoreboard') }}">Scoreboard</a></li>
+          <li class="navbar-item"><a class="navbar-link" href="{{ url_for('player.player_dashboard') }}">Dashboard</a></li>
+          <li class="navbar-item-right"><a class="navbar-link" href="{{ url_for('auth.logout') }}">Log Out</a></li>
+          <li class="navbar-item-right"><span class="navbar-link">{{ g.user['username'] }}</span></li>
+        {% else %}
+          <li class="navbar-item"><a class="navbar-link" href="{{ url_for('scoreboard.scoreboard') }}">Scoreboard</a></li>
+          <li class="navbar-item"><a class="navbar-link" href="{{ url_for('about') }}">About</a></li>
+          <li class="navbar-item-right"><a class="navbar-link" href="{{ url_for('auth.login') }}">Log In</a></li>
+        {% endif %}
+      </ul>
+    </div>
+  </nav>
+  <section class="content">
+    <header>
+      <br>
+      {% block header %}{% endblock %}
+    </header>
+    {% if get_flashed_messages()|length %}
+      <div class="flash">
+        {% for message in get_flashed_messages() %}
+          <div class="flash-message">{{ message }}</div>
+        {% endfor %}
+        <br>
+      </div>
+    {% endif %}
+    {% block content %}{% endblock %}
+  </section>
+</div>

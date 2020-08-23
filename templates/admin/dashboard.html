@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% block title %}Admin Dashboard{% endblock %}
+{% block header %}
+{% endblock %}
+
+{% block content %}  
+{% if initialized %}
+<div>
+  <h6 class="caps-header">Run Hour</h6>
+  Runs the selected hour: bids for that hour are recorded, the hour's computations completed, 
+  and the hourly sheet updated accordingly. The summary sheet is updated for that hour only; 
+  changes do not propagate forwards (you must run the subsequent hours to do so).
+  <form method="POST" id="run-hour-form">
+    <label for="hour-select">Select Hour</label>
+    <select name="hour-select" id="hour-select">
+      {% for hour in pretty_headers %}
+      <option value="{{ hour }}">{{ hour }}</option>
+      {% endfor %}
+    </select>
+    <input class="button-primary" type="submit" name="run-hour" value="Run Hour" onclick="return confirmselect();">
+    
+  </form>
+  <script type="text/javascript">
+    function confirmselect(){
+      var s=document.getElementById("hour-select").value;
+      var response=confirm("Are you sure you want to run hour " + s + "?");
+      return response;
+    }
+  </script>  
+</div>
+<div style="border-top: 1px solid #eee; margin-bottom: 40rem;">
+  <h6 class="caps-header" style="margin-top: 2rem;">Pending Bids</h6>
+  <div class="row">
+    <div class="u-full-width">
+        <div class="scrolling-wrapper-flexbox">
+            <table>
+                <tr>
+                    <th class="sticky-col first-col-60">Portfolio</th>
+                    <th class="sticky-col first-col-120" style="left: 75px;">Unit Name</th>
+                    {% for header in pretty_headers %}
+                        <th>{{ header }}</th>
+                    {% endfor %}
+                </tr>
+                {% for row in bids.itertuples() %}
+                    <tr>
+                        <td class="sticky-col first-col-60" style="white-space: nowrap;">{{ row['portfolio_name'] }}</td>
+                        <td class="sticky-col first-col-120" style="left: 75px;">{{ row['unit_name'] }}</td>
+                        {% for bid_value in row[4:] %}
+                            <td>
+                                {% if bid_value == None %}{% else %}{{ '{:.2f}'.format(bid_value) }}{% endif %}
+                            </td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+</div>            
+
+</div>
+{% else %}
+The game has not yet been initialized. You can initialize the game via the config panel.
+{% endif %}
+{% endblock %}

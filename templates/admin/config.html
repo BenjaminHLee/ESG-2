@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+{% block title %}Config{% endblock %}
+
+{% block header %}
+{% endblock %}
+
+{% block content %}
+    <div>
+        <h6 class="caps-header">Initialize Game</h6>
+        <p>
+            Pressing this button will overwrite the bids file, summary file, and hourly files. 
+            They will be overwritten in accordance with the current player accounts as
+            well as the contents of the config files. <b>This will restart an existing game.</b>
+            Before initializing the game, be sure to verify that the configuration files 
+            and player accounts are correct. You should not need to initialize more than 
+            once per game.
+        </p>
+        <form action="{{ url_for('admin.start_game') }}" style="margin-bottom: 3rem;" method="post" onsubmit="return confirm('Are you sure you want to overwite the specified files? This action cannot be undone.');">
+            <input class="{% if not initialized %}button-primary{% endif %}" type="submit" name="intialize" value="Initialize Game">
+        </form>
+    </div>
+    <div style="border-top: 1px solid #eee;">
+        <h6 class="caps-header" style="margin-top: 2rem;">Config Files</h6>
+        <p><a href="{{ url_for('admin.uploaded_config_file', filename='portfolios.csv') }}">portfolios.csv</a>
+        <a href="{{ url_for('admin.uploaded_config_file', filename='schedule.csv') }}">schedule.csv</a>
+        <a href="{{ url_for('admin.uploaded_config_file', filename='game_settings.csv') }}">game_settings.csv</a>
+        <a href="{{ url_for('admin.uploaded_config_file', filename='test.csv') }}">test.csv</a></p>
+        <p><a href="{{ url_for('admin.config_upload') }}">Upload files</a></p>
+    </div>
+    <div style="border-top: 1px solid #eee; margin-bottom: 40rem;">
+        <h6 class="caps-header" style="margin-top: 2rem;">Player Management</h6>
+        <table>
+            <script type="text/javascript">
+                function toggle_visibility(cl){
+                    var els = document.getElementsByClassName(cl);
+                    for(var i=0; i<els.length; ++i){
+                        var s = els[i].style;
+                        s.display = s.display==='none' ? 'block' : 'none';
+                    };
+                }
+            </script>
+            <style>
+                select, input, form {margin-bottom: 0;}
+                .togglable-column {display: none;}
+            </style>
+            <tr>
+                <th><a onclick="toggle_visibility('togglable-column');">Edit</th>
+                <th>Username</th>
+                <th>Portfolio</th>
+                <th>Initial Balance</th>
+                <th><div class="togglable-column">Set Initial Balance</div></th>
+                    <th><div class="togglable-column">Set Portfolio</div></th>
+                    </tr>
+            {% for player in players %}
+            <tr>
+                <td>
+                    <form class="togglable-column" action="{{ url_for('admin.delete_user') }}" method="post" onsubmit="return confirm('Are you sure you want to delete player {{ player['username'] }}? This action cannot be undone.');">
+                        <input type="submit" name="{{ player['player_id'] }}" value="Delete">
+                    </form>
+                </td>
+                <td>{{ player['username'] }}</td>
+                <td>{{ player['portfolio'] }}</td>
+                <td>{{ '{:.2f}'.format(player['starting_money']) }}</td>
+                <td>
+                    <form class="togglable-column" action="{{ url_for('admin.set_starting_money') }}" method="post">
+                        <input type="text" name="starting-money" placeholder="e.g. -2020.92">
+                        <input type="submit" name="{{ player['player_id'] }}" value="Set Balance">
+                    </form>
+                </td>
+                <td>
+                    <form class="togglable-column" action="{{ url_for('admin.set_portfolio') }}" method="post">
+                        <select name="portfolio" id="portfolio">
+                            {% for (portfolio, _) in portfolio_choices %}
+                            <option value="{{ portfolio }}">{{ portfolio }}</option>
+                            {% endfor %}
+                        </select>
+                        <input type="submit" name="{{ player['player_id'] }}" value="Set Portfolio">
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+        <a href="{{ url_for('auth.register') }}">Add Player</a>
+    </div>
+{% endblock %}

@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h6 class="caps-header">{% block title %}Player Dashboard{% endblock %}</h6>
+{% endblock %}
+
+{% block content %}
+{% if initialized %}
+{% if adjustment == "disabled" %}
+<div class="row">
+    <div class="u-full-width">
+        <div class="scrolling-wrapper-flexbox">
+            <form method="POST" id="no-adjust-form"></form>
+            <table>
+                <tr>
+                    <th class="sticky-col first-col-120">Unit Name</th>
+                    {% for header in pretty_headers %}
+                        <th>{{ header }}</th>
+                    {% endfor %}
+                </tr>
+                {# 
+                    Each form input is identified by the following name:
+                    {{ 'id_' ~ row['unit_id'] ~ '_header_' ~ bids.columns[2:][loop.index - 1] }} 
+                #}
+                {% for row in bids.itertuples() %}
+                    <tr>
+                        <td class="sticky-col first-col-120">{{ row['unit_name'] }}</td>
+                        {% for bid_value in row[3:] %}
+                            <td>
+                                <input 
+                                form="no-adjust-form"
+                                type="text" 
+                                style="width: 60px; margin-bottom: 0;" 
+                                name="{{ 'id-' ~ row['unit_id'] ~ '-header-' ~ bids.columns[2:][loop.index - 1] }}" 
+                                placeholder="{% if bid_value == None %}{% else %}{{ '{:.2f}'.format(bid_value) }}{% endif %}">
+                            </td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+</div>            
+<input form="no-adjust-form" class="button-primary" type="submit" name="place-bids-no-adjust" value="Place bids">
+{% endif %}
+{% else %}
+The game has not yet been initialized. An administrator can initialize the game via their config panel.
+{% endif %}
+<div style="border-top: 1px solid #eee;">
+    <h6 class="caps-header" style="margin-top: 2rem;">Config Files</h6>
+    <p><a href="{{ url_for('admin.uploaded_config_file', filename='portfolios.csv') }}">portfolios.csv</a>
+    <a href="{{ url_for('admin.uploaded_config_file', filename='schedule.csv') }}">schedule.csv</a>
+    <a href="{{ url_for('admin.uploaded_config_file', filename='game_settings.csv') }}">game_settings.csv</a>
+</div>
+{% endblock %}

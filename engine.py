@@ -1,18 +1,21 @@
 # hello world!
 
-# imports
+import os
+
 import numpy as np
 import pandas as pd
 
+from esg2 import CSV_FOLDER, CONFIG_FOLDER, HOURLY_FOLDER
+from esg2.utilities import get_game_setting, get_initialized_portfolio_ids_list
 
 # SUMMARY SPREADSHEET:
 # Captures a macroscopic summary of performance over hours.
-# -   summary : round,hour,north,south,net,
+# -   round,hour,n_to_s_capacity,s_to_n_capacity,north,south,net,slope,auction_type,
 #     [player_{player_id}_revenue,player_{player_id}_cost,player_{player_id}_profit],
 #     [player_{player_id}_balance] 
 
-def create_summary_sheet(schedule_df, users_df):
-    user_ids = users_df['portfolio_id'].tolist()
+def create_summary_sheet(schedule_df, players_df):
+    player_ids = players_df['portfolio_id'].tolist()
 
     # lambda functions for the header-generating list comprehension
     header_revenue  = lambda i: 'player_' + str(i) + '_revenue'
@@ -21,18 +24,18 @@ def create_summary_sheet(schedule_df, users_df):
     header_balance  = lambda i: 'player_' + str(i) + '_balance'
 
     # Generates headers [player_{player_id}_revenue,player_{player_id}_cost,player_{player_id}_profit],
-    # [player_{player_id}_balance] for each {player_id} in the users.csv file.
-    summary_player_headers = ([f(i) for i in user_ids for f in (header_revenue, header_cost, header_profit)] 
-                                + [header_balance(i) for i in user_ids])
+    # [player_{player_id}_balance] for each {player_id} in the players.csv file.
+    summary_player_headers = ([f(i) for i in player_ids for f in (header_revenue, header_cost, header_profit)] 
+                                + [header_balance(i) for i in player_ids])
 
     # Note that this is a local variable. As summary_df will constantly be written and read from summary.csv, it is
-    # important to load from the True summary.csv file whenever the data is needed, instead of a potentially out-of-
+    # important to load from the true summary.csv file whenever the data is needed, instead of a potentially out-of-
     # date summary_df variable. Whenever possible, functions should interact indirectly through writing to summary.csv
     # and then reading summary.csv, instead of chaining functions directly.
     summary_df = pd.concat([schedule_df, pd.DataFrame(columns=(summary_player_headers))], axis=1)
 
     # summary.csv is saved in the /csv/ directory.
-    summary_df.to_csv('csv/summary.csv', index=False)
+    summary_df.to_csv(os.path.join(CSV_FOLDER, 'summary.csv'), index=False)
 
 # HOURLY SPREADSHEETS:
 # A set of spreadsheets (one per hour) recording bids, production, and revenue/cost for each unit. 
@@ -41,20 +44,24 @@ def create_summary_sheet(schedule_df, users_df):
 #     cost_per_mwh,cost_daily_om,carbon_per_mwh, 
 #     bid_base,bid_up,bid_down, 
 #     activated,mwh_produced_initially,mwh_produced_base,mwh_adjusted_down,mwh_adjusted_up,mwh_produced,
-#     carbon_produced,base_revenue,adjust_down_revenue,adjust_up_revenue,revenue,cost_var,cost_om,profit 
+#     carbon_produced,base_revenue,adjust_down_revenue,adjust_up_revenue,revenue,cost_var,cost_om,cost_carbon,profit
 
 def create_hourly_sheets(schedule_df, portfolios_df):
     # a list of (round, hour) pairs, for the purpose of naming each sheet
     round_hour_tuples = list(schedule_df[['round', 'hour']].itertuples(index=False, name=None))
 
+    # get the portfolios that are active during this game
+    portfolios_df = portfolios_df[portfolios_df['portfolio_id'].isin(get_initialized_portfolio_ids_list())]
+
     hourly_additional_headers = ['bid_base','bid_up','bid_down','base_price','activated','mwh_produced_initially',
                                  'mwh_produced_base','mwh_adjusted_down','mwh_adjusted_up','mwh_produced',
-                                 'carbon_produced','base_revenue','adjust_down_revenue','adjust_up_revenue','revenue','cost_var','cost_om','profit']
+                                 'carbon_produced','base_revenue','adjust_down_revenue','adjust_up_revenue',
+                                 'revenue','cost_var','cost_om','cost_carbon','profit']
 
     for (r, h) in round_hour_tuples:
         hourly_df = pd.concat([portfolios_df, pd.DataFrame(columns=(hourly_additional_headers))], axis=1)
         # round_r_hour_h.csv is saved in the /csv/hourly/ directory.
-        hourly_df.to_csv('csv/hourly/round_' + str(r) + '_hour_' + str(h) + '.csv', index=False)
+        hourly_df.to_csv(os.path.join(HOURLY_FOLDER, 'round_' + str(r) + '_hour_' + str(h) + '.csv'), index=False)
 
 # CURRENT BID SPREADSHEET:
 # Records bids for all hours as submitted by players. Constantly updating according to player form 
@@ -73,6 +80,9 @@ def create_bids_sheet(schedule_df, portfolios_df):
     # the part of portfolios_df that is used to construct bids_df
     portfolios_headers = ['portfolio_id','portfolio_name','unit_id','unit_name']
 
+    # get the portfolios that are active during this game
+    portfolios_df = portfolios_df[portfolios_df['portfolio_id'].isin(get_initialized_portfolio_ids_list())]
+
     # lambda functions for the header-generating list comprehension
     # each of these functions is equivalent to lambda (r, h): ... , but tuple unpacking was removed
     header_base = lambda r_h: 'bid_base_' + str(r_h[0]) + '_' + str(r_h[1])
@@ -83,11 +93,15 @@ def create_bids_sheet(schedule_df, portfolios_df):
 
     bids_df = pd.concat([portfolios_df[portfolios_headers], pd.DataFrame(columns=bids_r_h_headers)], axis=1)
 
+    for header in bids_r_h_headers:
+        bids_df[header] = get_game_setting('max bid')
+        # No bid: default to max bid
+
     # bids.csv is saved in the /csv/ directory.
-    bids_df.to_csv('csv/bids.csv',index=False)
+    bids_df.to_csv(os.path.join(CSV_FOLDER, 'bids.csv'),index=False)
 
 
-def determine_active_units(r, h, bids_df, schedule_df, hourly_df, portfolios_df):
+def determine_active_units(r, h, bids_df, schedule_df, hourly_df, portfolios_df, adjustment):
     # Read bids from bids_df into hourly_df
     hourly_df['bid_base'] = bids_df[('bid_base_' + str(r) + '_' + str(h))]
     hourly_df['bid_up']   = bids_df[('bid_up_'   + str(r) + '_' + str(h))]
@@ -122,7 +136,9 @@ def determine_active_units(r, h, bids_df, schedule_df, hourly_df, portfolios_df)
     print("North prod: {} / North demand: {}".format(north_production, north_demand))
     print("South prod: {} / South demand: {}".format(south_production, south_demand))
 
-    if (north_production - north_demand <= n_to_s_capacity and south_production - south_demand <= s_to_n_capacity):
+    if adjustment == False:
+        print("Adjustment disabled.")
+    elif (north_production - north_demand <= n_to_s_capacity and south_production - south_demand <= s_to_n_capacity):
         # then transmission resolves it and we're fine
         print("No adjustment necessary.")
     elif (north_production - north_demand >= n_to_s_capacity):
@@ -171,8 +187,6 @@ def determine_active_units(r, h, bids_df, schedule_df, hourly_df, portfolios_df)
             print("Increased unit {} (base: {}, up: {}) production by {} MWh to {} MWh at price ${}. Remaining deficit: {}"
                     .format(unit['unit_id'], unit['bid_base'], unit['bid_up'], mwh_increased,
                     (mwh_produced_initially + mwh_increased),(unit['bid_base'] - unit['bid_up']), deficit))
-
-
     elif (south_production - south_demand >= s_to_n_capacity):
         print("South overproducing.")
         # north has a deficit, south has a surplus
@@ -343,6 +357,8 @@ def complete_hourly_sheet(hourly_df, last_hour):
     cost_var_record = []
     # cost_om
     cost_om_record = []
+    # cost_carbon
+    cost_carbon_record = []
     # profit
     profit_record = []
 
@@ -362,7 +378,8 @@ def complete_hourly_sheet(hourly_df, last_hour):
             cost_om = cost_daily_om
         else:
             cost_om = 0
-        cost = cost_var + cost_om
+        cost_carbon = cost_carbon_function(mwh_produced * carbon_per_mwh)
+        cost = cost_var + cost_om + cost_carbon
         profit = revenue - cost
 
         mwh_record.append(mwh_produced)
@@ -373,6 +390,7 @@ def complete_hourly_sheet(hourly_df, last_hour):
         revenue_record.append(revenue)
         cost_var_record.append(cost_var)
         cost_om_record.append(cost_om)
+        cost_carbon_record.append(cost_carbon)
         profit_record.append(profit)
 
     # mwh_produced,carbon_produced,base_revenue,adjust_down_revenue,adjust_up_revenue,revenue,cost_var,cost_om,profit
@@ -384,9 +402,19 @@ def complete_hourly_sheet(hourly_df, last_hour):
     hourly_df['revenue']             = pd.Series(revenue_record, index=hourly_df.index[:len(revenue_record)])
     hourly_df['cost_var']            = pd.Series(cost_var_record, index=hourly_df.index[:len(cost_var_record)])
     hourly_df['cost_om']             = pd.Series(cost_om_record, index=hourly_df.index[:len(cost_om_record)])
+    hourly_df['cost_carbon']         = pd.Series(cost_carbon_record, index=hourly_df.index[:len(cost_om_record)])
     hourly_df['profit']              = pd.Series(profit_record, index=hourly_df.index[:len(profit_record)])
 
     return hourly_df
+
+def cost_carbon_function(carbon_produced):
+    """An arbitrary function that determines the cost of carbon.
+    This particular definition is a simple linear function."""
+    if get_game_setting('carbon') == 'enabled':
+        carbon_tax_rate = get_game_setting('carbon tax rate')
+        return carbon_produced * carbon_tax_rate
+    else:
+        return 0.00
 
 def last_hour(r, h): # TODO: update this to handle variable numbers of hours
     if (h == 4):
@@ -394,13 +422,13 @@ def last_hour(r, h): # TODO: update this to handle variable numbers of hours
     else:
         return False
 
-def run_hour(r, h, bids_df):
+def run_hour(r, h, bids_df, schedule_df, portfolios_df, adjustment):
     print("Running round {} hour {}".format(r, h))
     # read hourly csv
-    hourly_df = pd.read_csv('csv/hourly/round_' + str(r) + '_hour_' + str(h) + '.csv')
+    hourly_df = pd.read_csv(os.path.join(HOURLY_FOLDER, 'round_' + str(r) + '_hour_' + str(h) + '.csv'))
 
     # determine active units
-    hourly_df = determine_active_units(r, h, bids_df, schedule_df, hourly_df, portfolios_df)
+    hourly_df = determine_active_units(r, h, bids_df, schedule_df, hourly_df, portfolios_df, adjustment)
 
     # check if it's the last hour of the round
     last = last_hour(r, h)
@@ -408,7 +436,7 @@ def run_hour(r, h, bids_df):
     # complete hourly sheet columns carbon_produced,revenue,adjust_down_revenue,cost_var,cost_om,profit
     hourly_df = complete_hourly_sheet(hourly_df, last)
 
-    hourly_df.to_csv('csv/hourly/round_' + str(r) + '_hour_' + str(h) + '.csv',index=False) 
+    hourly_df.to_csv(os.path.join(HOURLY_FOLDER, 'round_' + str(r) + '_hour_' + str(h) + '.csv'),index=False) 
 
 
 # SUMMARY SPREADSHEET:
@@ -417,10 +445,10 @@ def run_hour(r, h, bids_df):
 #     [player_{player_id}_revenue,player_{player_id}_cost,player_{player_id}_profit],
 #     [player_{player_id}_balance] 
 
-def update_summary(r, h, summary_df, users_df):
-    hourly_df = pd.read_csv('csv/hourly/round_' + str(r) + '_hour_' + str(h) + '.csv')
+def update_summary(r, h, summary_df, players_df):
+    hourly_df = pd.read_csv(os.path.join(HOURLY_FOLDER, 'round_' + str(r) + '_hour_' + str(h) + '.csv'))
 
-    portfolio_ids = users_df['portfolio_id'].tolist()
+    portfolio_ids = players_df['portfolio_id'].tolist()
 
     print("Hour summary:")
 
@@ -449,14 +477,14 @@ def update_summary(r, h, summary_df, users_df):
         balance = 0
 
         if (summary_df.loc[(summary_df['round'] == r) & (summary_df['hour'] == h)].index.values.astype(int)[0] == 0):
-            # if round/hour row is at the top of the table, factor in starting money from users_df (multiplied by interest rate)
-            balance = ((1 + daily_interest_rate) * 
-                       users_df.loc[(users_df['portfolio_id'] == portfolio_id),'starting_money'].values.astype(int)[0]) + profits
+            # if round/hour row is at the top of the table, factor in starting money from players_df (multiplied by interest rate)
+            balance = ((1 + float(get_game_setting('interest rate'))) * 
+                       players_df.loc[(players_df['portfolio_id'] == portfolio_id),'starting_money'].values.astype(int)[0]) + profits
         else:
             # otherwise, look at the value above and add profits (multiplied by interest rate)
             current_row_index = summary_df.loc[(summary_df['round'] == r) & (summary_df['hour'] == h)].index.values.astype(int)[0]
             if (h == 1):
-                balance = (1 + daily_interest_rate) * summary_df.iloc[current_row_index - 1][balance_header] + profits 
+                balance = (1 + float(get_game_setting('interest rate'))) * summary_df.iloc[current_row_index - 1][balance_header] + profits 
             else:
                 balance = summary_df.iloc[current_row_index - 1][balance_header] + profits 
 
@@ -467,40 +495,38 @@ def update_summary(r, h, summary_df, users_df):
 
         summary_df.loc[(summary_df['round'] == r) & (summary_df['hour'] == h),balance_header] = round(balance, 2)
 
-    summary_df.to_csv('csv/summary.csv', index=False)
+    summary_df.to_csv(os.path.join(CSV_FOLDER, 'summary.csv'), index=False)
 
 
-# read CONFIG SPREADSHEETS from /csv/config files
-schedule_df = pd.read_csv('csv/config/schedule.csv')
-portfolios_df = pd.read_csv('csv/config/portfolios.csv')
-users_df = pd.read_csv('csv/config/users.csv')
+# # read CONFIG SPREADSHEETS from /csv/config files
+# schedule_df = pd.read_csv(os.path.join(CONFIG_FOLDER, 'schedule.csv'))
+# portfolios_df = pd.read_csv(os.path.join(CONFIG_FOLDER, 'portfolios.csv'))
+# players_df = pd.read_csv(os.path.join(CONFIG_FOLDER, 'players.csv'))
 
-schedule_df = schedule_df.sort_values(by=['round', 'hour'], ascending=[True, True])
-users_df = users_df.sort_values(by=['portfolio_id'], ascending=[True])
+# schedule_df = schedule_df.sort_values(by=['round', 'hour'], ascending=[True, True])
+# players_df = players_df.sort_values(by=['portfolio_id'], ascending=[True])
 
-daily_interest_rate = 0.00
+# create_summary_sheet(schedule_df, players_df)
+# create_hourly_sheets(schedule_df, portfolios_df)
 
-create_summary_sheet(schedule_df, users_df)
-create_hourly_sheets(schedule_df, portfolios_df)
+# summary_df = pd.read_csv(os.path.join(CSV_FOLDER, 'summary.csv'))
+# bids_df = pd.read_csv('csv/bids.csv')
 
-summary_df = pd.read_csv('csv/summary.csv')
-bids_df = pd.read_csv('csv/bids.csv')
+# run_hour(1, 1, bids_df)
+# print("Hour 1 run; updating summary")
+# update_summary(1, 1, summary_df, players_df)
 
-run_hour(1, 1, bids_df)
-print("Hour 1 run; updating summary")
-update_summary(1, 1, summary_df, users_df)
+# run_hour(1, 2, bids_df)
+# print("Hour 2 run; updating summary")
+# update_summary(1, 2, summary_df, players_df)
 
-run_hour(1, 2, bids_df)
-print("Hour 2 run; updating summary")
-update_summary(1, 2, summary_df, users_df)
+# run_hour(1, 3, bids_df)
+# print("Hour 3 run; updating summary")
+# update_summary(1, 3, summary_df, players_df)
 
-run_hour(1, 3, bids_df)
-print("Hour 3 run; updating summary")
-update_summary(1, 3, summary_df, users_df)
-
-run_hour(1, 4, bids_df)
-print("Hour 4 run; updating summary")
-update_summary(1, 4, summary_df, users_df)
+# run_hour(1, 4, bids_df)
+# print("Hour 4 run; updating summary")
+# update_summary(1, 4, summary_df, players_df)
 
 
 

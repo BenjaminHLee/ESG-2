@@ -39,7 +39,7 @@ Records bids for all hours as submitted by players. Constantly updating accordin
 
 ### PROGRAM FLOW
 
-Before running the game, the administrator provides the `schedule.csv`, `portfolios.csv`, and `users.csv` files. This defines the number of rounds, number of players, portfolio contents, unit attributes, starting balances (based off of portfolio auction results), and hourly game conditions. This also defines player login credentials. Yes, the notion of security is foreign and the concept of a hash function unfamiliar. (Players should understand that this game is not a technical exercise.)
+Before running the game, the administrator provides the `schedule.csv`, `portfolios.csv`, and `players.csv` files. This defines the number of rounds, number of players, portfolio contents, unit attributes, starting balances (based off of portfolio auction results), and hourly game conditions. This also defines player login credentials. Yes, the notion of security is foreign and the concept of a hash function unfamiliar. (Players should understand that this game is not a technical exercise.)
 
 All of the .csv files are created at the start of the game — this means that all of the spreadsheets exist for the entirety of the game. Spreadsheet data is never overwritten, except at the discretion of the game administrator. As such, reviewing prior states/reverting to a prior state is fairly painless.
 

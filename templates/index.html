@@ -1,16 +1,8 @@
-<html>
+{% extends 'base.html' %}
 
-<head>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/skeleton/2.0.4/skeleton.css" />
-    <title>ESG 2</title>
-</head>
+{% block header %}
+  <h1>{% block title %}{% endblock %}</h1>
+{% endblock %}
 
-<body>
-    <div class="container">
-        <section class="header">
-            <h1 class="title">ESG 2</h1>
-        </section>
-    </div>
-</body>
-
-</html>
+{% block content %}
+{% endblock %}

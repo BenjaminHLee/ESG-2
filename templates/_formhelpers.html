@@ -1,0 +1,8 @@
+{% macro render_labeled_field(field) %}
+  {{ field.label }}
+  {{ field(**kwargs)|safe }}
+{% endmacro %}
+
+{% macro render_field(field) %}
+  {{ field(**kwargs)|safe }}
+{% endmacro %}

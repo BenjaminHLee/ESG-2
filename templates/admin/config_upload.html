@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block title %}Upload Config File{% endblock %}
+
+{% block header %}
+    <h6 class="caps-header">Upload Config File</h6>
+{% endblock %}
+
+{% block content %}
+<form method=post enctype=multipart/form-data>
+    <div class="row">
+        <div class="six columns">
+            <select class="u-full-width" name="filename" id="filename">
+                <option value="" style="display:none">Select file to overwrite</option>
+                <option value="portfolios">portfolios.csv</option>
+                <option value="schedule">schedule.csv</option>
+                <option value="game_settings">game_settings.csv</option>
+                <option value="test">test.csv</option>
+            </select>
+        </div>
+    </div>
+    <div class="row">
+        <div class="six columns">
+            <input type=file name=file> 
+        </div>
+    </div>
+    <input class="button-primary" type=submit value=Upload>
+</form>
+{% endblock %}

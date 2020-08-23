@@ -1,0 +1,18 @@
+DROP TABLE IF EXISTS user;
+DROP TABLE IF EXISTS player;
+DROP TABLE IF EXISTS bids;
+
+CREATE TABLE user (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  username TEXT UNIQUE NOT NULL,
+  password TEXT NOT NULL,
+  usertype TEXT NOT NULL
+);
+
+CREATE TABLE player (
+  player_id INTEGER NOT NULL,
+  portfolio TEXT UNIQUE NOT NULL,
+  portfolio_id INTEGER UNIQUE NOT NULL,
+  starting_money DECIMAL(32,2) NOT NULL,
+  FOREIGN KEY (player_id) REFERENCES user (id)
+);
