@@ -1,0 +1,5 @@
+include esg2/schema.sql
+graft esg2/csv
+graft esg2/static
+graft esg2/templates
+global-exclude *.pyc
