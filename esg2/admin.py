@@ -214,10 +214,10 @@ def admin_dashboard():
         h = int(h)
         bids_df = pd.read_csv(os.path.join(CSV_FOLDER, 'bids.csv'))
 
-        if get_game_setting('adjustment') == 'disabled':
-            adjustment = False
-        else:
+        if get_game_setting('adjustment') == 'per portfolio' or get_game_setting('adjustment') == 'per unit':
             adjustment = True
+        else:
+            adjustment = False
 
         engine.run_hour(r, h, bids_df, schedule_df, portfolios_df, adjustment)
         engine.update_summary(r, h, summary_df, players_df)

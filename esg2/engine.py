@@ -107,15 +107,9 @@ def determine_active_units(r, h, bids_df, schedule_df, hourly_df, portfolios_df,
     hourly_df['bid_up']   = bids_df[('bid_up_'   + str(r) + '_' + str(h))]
     hourly_df['bid_down'] = bids_df[('bid_down_' + str(r) + '_' + str(h))]
 
-    # Create market-wide supply curve 
-    # net_supply_curve = construct_net_supply_curve(hourly_df) TODO properly
-
-    # Find intersection price, quantity
-    # (price, quantity) = intersect_supply_demand(r, h, schedule_df, net_supply_curve) TODO properly
-
     # Update hourly sheet with preliminary activations at price up unitl demand is fulfilled
     # This means that we're going to be 'working-in-place' on the hourly dataframe while running this function.
-    hourly_df = run_initial_activation(r, h, schedule_df, hourly_df) # HACK only works because demand is perfectly inelastic
+    hourly_df = run_initial_activation(r, h, schedule_df, hourly_df)
 
     # Not all of the plants are going to be checked for adjustment down/up; initializing with 0's avoids later issues
     hourly_df['mwh_adjusted_down'] = 0
