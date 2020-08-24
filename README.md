@@ -3,7 +3,7 @@ Prototype implementation of Electricity Strategy Game v2 based off of rules by V
 
 ## STATUS
 
-Complete CSV tool. Full support for base ESG game as well as adjustment bidding.
+Complete CSV tool. Full support for base ESG game as well as adjustment bidding. This branch is kept for posterity's sake; it should *not* be considered a design document.
 
 ## PROGRAM EXPLANATION
 
@@ -37,7 +37,7 @@ Records bids for all hours as submitted by players. Constantly updating accordin
 
 ### PROGRAM FLOW
 
-Before running the game, the administrator provides the `schedule.csv`, `portfolios.csv`, and `users.csv` files. This defines the number of rounds, number of players, portfolio contents, unit attributes, starting balances (based off of portfolio auction results), and hourly game conditions. This also defines player login credentials. Yes, the notion of security is foreign and the concept of a hash function unfamiliar. (Players should understand that this game is not a technical exercise.)
+Before running the game, the administrator provides the `schedule.csv`, `portfolios.csv`, and `users.csv` files. This defines the number of rounds, number of players, portfolio contents, unit attributes, starting balances (based off of portfolio auction results), and hourly game conditions. 
 
 All of the .csv files are created at the start of the game — this means that all of the spreadsheets exist for the entirety of the game. Spreadsheet data is never overwritten, except at the discretion of the game administrator. As such, reviewing prior states/reverting to a prior state is fairly painless.
 
@@ -45,32 +45,7 @@ At any point in time, the game will be in one of two states: in a round or over.
 
 #### DURING A ROUND
 
-Players submit bids. This updates the bids spreadsheet.
-
-The administrator runs the hour. This takes in the hour's parameters (from `schedule.csv`) and the player bids (from the current `bids.csv` file), and determines which units will activate at which price. See "ACTIVATING UNITS" for specific information on how this is determined, including adjustment. This information is used to update the current `round_#_hour_#.csv` file as well as the `summary.csv` file. The information is also used to draw three charts representing the net market, the south market, the north market, and the adjustments made. The hour is then advanced.
-
-The PLAYER VIEW will consist of:
-- A means through which the player can read the data in the `summary.csv` file, the past charts, and the past hourly spreadsheets
-- A BIDDING FORM through which players can submit production bids for upcoming hours. 
-    Rough visualization:
-    ```
-    — BIDDING FORM ———————————————————————————————————————————————————————————————————————————————    
-    | Day/Hour      Unit_1 bid  Unit_2 bid  Unit_3 bid  Unit_4 bid  Up adjust bid  Down adjust bid
-    | Day 2 hour 1: [        ]  [        ]  [        ]  [        ]     [        ]       [        ]
-    | Day 2 hour 2: [        ]  [        ]  [        ]  [        ]     [        ]       [        ]
-    | Day 2 hour 3: [        ]  [        ]  [        ]  [        ]     [        ]       [        ]
-    | Day 2 hour 4: [        ]  [        ]  [        ]  [        ]     [        ]       [        ]
-    | Day 3 hour 1: [        ]  [        ]  [        ]  [        ]     [        ]       [        ]
-    | Day 3 hour 2: [        ]  [        ]  [        ]  [        ]     [        ]       [        ]
-    | ...
-    ```
-    (Note that there is a single upwards adjustment bid across all units for any given hour; this is according to the game specification, but not a constraint of the backend logic. The engine supports unit-specific adjustment bids.)
-
-The ADMIN VIEW will consist of:
-- A means through which the admin can read the data in the `summary.csv` file, the past charts, the past hourly spreadsheets, the bids spreadsheet, and the config spreadsheets.
-- A button that runs the current hour and advances to the next hour.
-- A means through which the admin can edit the summary, bids, and config spreadsheets.
-- A means through which the admin can change the current round/hour (to revert to a prior state)
+The user runs the hour. This takes in the hour's parameters (from `schedule.csv`) and the player bids (from the current `bids.csv` file), and determines which units will activate at which price. See "ACTIVATING UNITS" for specific information on how this is determined, including adjustment. This information is used to update the current `round_#_hour_#.csv` file as well as the `summary.csv` file. 
 
 #### GAME OVER
 
