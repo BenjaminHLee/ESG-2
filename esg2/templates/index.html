@@ -1,8 +1,26 @@
 {% extends 'base.html' %}
 
 {% block header %}
-  <h1>{% block title %}{% endblock %}</h1>
+  <h6 class="caps-header">ESG-2</h6>
 {% endblock %}
 
 {% block content %}
+  <div class="row">
+    <div class="eight columns">
+      <p>
+        Welcome to the Electricity Strategy Game!
+      </p>
+      <p>
+        If you are the game 
+        administrator or a player, you may wish to authenticate via the 
+        <a href="{{ url_for('auth.login') }}">login page</a>. If not, you can
+        also see the current game's progress through the
+      <a href="{{ url_for('scoreboard.scoreboard') }}">scoreboard page</a>.
+      </p>
+      <p>
+        For an introduction to the ESG, check out the 
+        <a href="{{ url_for('about') }}">about page</a>.
+      </p>
+    </div>
+  </div>
 {% endblock %}

@@ -2,86 +2,119 @@
 {% block title %}About{% endblock %}
 
 {% block header %}
-  <h1></h1>
 {% endblock %}
 
 {% block content %}
-<h6 class="caps-header">ESG</h6>
-<h6 class="esg-header">ESG</h6>
-ESG 2 <br>
-ESG 2 <br>
-ESG 2 <br>
-ESG 2 <br>
-ESG 2 <br>
-ESG 2 <br>
-ESG 2 <br>
-ESG 2 <br>
-ESG 2 <br>
-ESG 2 <br>
-ESG 2 <br>
-ESG 2 <br>
-ESG 2 <br>
-ESG 2 <br>
-ESG 2 <br>
-ESG 2 <br>
-ESG 2 <br>
-ESG 2 <br>
-ESG 2 <br>
-ESG 2 <br>
-ESG 2 <br>
-ESG 2 <br>
-ESG 2 <br>
-ESG 2 <br>
-ESG 2 <br>
-ESG 2 <br>
-ESG 2 <br>
-ESG 2 <br>
-ESG 2 <br>
-ESG 2 <br>
-ESG 2 <br>
-ESG 2 <br>
-ESG 2 <br>
-ESG 2 <br>
-ESG 2 <br>
-ESG 2 <br>
-ESG 2 <br>
-ESG 2 <br>
-ESG 2 <br>
-ESG 2 <br>
-ESG 2 <br>
-ESG 2 <br>
-ESG 2 <br>
-ESG 2 <br>
-ESG 2 <br>
-ESG 2 <br>
-ESG 2 <br>
-ESG 2 <br>
-ESG 2 <br>
-ESG 2 <br>
-ESG 2 <br>
-ESG 2 <br>
-ESG 2 <br>
-ESG 2 <br>
-ESG 2 <br>
-ESG 2 <br>
-ESG 2 <br>
-ESG 2 <br>
-ESG 2 <br>
-ESG 2 <br>
-ESG 2 <br>
-ESG 2 <br>
-ESG 2 <br>
-ESG 2 <br>
-ESG 2 <br>
-ESG 2 <br>
-ESG 2 <br>
-ESG 2 <br>
-ESG 2 <br>
-ESG 2 <br>
-ESG 2 <br>
-ESG 2 <br>
-ESG 2 <br>
-ESG 2 <br>
+  <div class="row">
+    <div class="eight columns">
+      <h6 class="caps-header">About the game</h6>
+      <p>
+        In the Electricity Strategy Game, (teams of) players play as Scheduling
+        Coordinators, entities responsible for supplying the market with 
+        electricity. Their primary goal is to make more money than the other
+        players. 
+      </p>
+      <p>
+        The game has two primary phases: the portfolio auction and the hourly
+        spot markets. Each team owns one portfolio of power generation units. 
+        Portfolios are usually asymmetric; the number of units per 
+        portfolio varies, and the units themselves are usually unique. The 
+        units and portfolios involved in this game instance can be found 
+        <a href="{{ url_for('admin.uploaded_config_file', filename=
+        'portfolios.csv') }}">here</a>. Portfolios are assigned through a 
+        portfolio auction (traditionally a live English auction). Players
+        finance this initial acquisition by taking on debt (effectively a
+        negative starting balance).
+      </p>
+      <p>
+        After all the portfolios have been auctioned off, the hourly spot
+        markets begin. Players now have the opportunity to make money selling
+        their generated electricity to the market. The hourly spot markets
+        occur over the course of a set number of days, with a set number of
+        hours scheduled to occur each day. During each hour, players submit
+        bid prices on a per-unit basis. These prices represent the price per
+        megawatt-hour (MWh) the player would have to be paid in order to
+        activate that unit's power generation capabilities. Once all players
+        have submitted their bids for an hour, the administrator 'runs' the
+        hour. 
+      </p>
+      <p>
+        A supply curve is constructed from the market-wide bids (from all
+        players), and the market-wide demand curve is constructed from the
+        parameters provided in the 
+        <a href="{{ url_for('admin.uploaded_config_file', filename=
+        'schedule.csv') }}">game schedule file</a>. Units 'below' the demand
+        curve are activated; units 'above' the demand curve are 'too expensive'
+        and are not activated, as the market will not pay for those bids.
+        Activated units incur their variable production costs; all units incur
+        operations and maintenance costs regardless of their activation status.
+        Units that are activated sell their electricity. The price they receive
+        depends on the hour's auction type: in a discrete price hour, the unit
+        receives its bidded price per MWh; in a uniform price hour, the highest
+        activated price per MWh will be paid for all active units, regardless
+        of their submitted bid price. The revenues and costs are then
+        recorded for each player. An additional interest factor is incurred at
+        the start of each day. The interest rate, among other settings, is
+        set in the 
+        <a href="{{ url_for('admin.uploaded_config_file', filename=
+        'game_settings.csv') }}">game settings file</a>.
+      </p>
+      <p>
+        The game engine also supports an additional feature: adjustment 
+        bidding. Based on the California Independent System Operator (CAISO)
+        adjustment bidding procedure, this feature reflects the geographic
+        realities of power transmission and the importance of location-specific
+        production and demand. More details regarding adjustment bidding can
+        be found <a href=
+        "https://github.com/BenjaminHLee/ESG-2/blob/esg2-csv-tool/README.md">
+        here</a>. If adjustment bids are not enabled, disregard this section.
+      </p>
+    </div>
+  </div>
+  <div class="row">
+    <div class="eight columns" style="border-top: 1px solid #eee;">
+      <h6 class="caps-header" style="margin-top: 2rem;">About the app</h6>
+      <p>
+        This app was designed and implemented by Benjamin Lee. The app is
+        written with <a href="https://flask.palletsprojects.com/">Flask</a> 
+        in Python 3. The frontend style is derived from
+        <a href="http://getskeleton.com/">Skeleton</a>. 
+        The app was preceded by <a href="https://github.com/ehknight/ESG">
+        Ethan Knight's implementation</a> of the ESG, which in turn was based 
+        on the <a href="https://esg.haas.berkeley.edu/">UC Berkeley Electricity 
+        Strategy Game by Severin Borenstein and Jim Bushnell</a>. 
+        Specifications were drawn from that implementation as well as 
+        conversations with Patrick Berger. Adjustment bidding mechanics were 
+        implemented according to designs by Christopher Martin, Steven Raanes,
+        Merritt Vassallo, and Aidan Wen, who in turn referenced numerous CAISO 
+        documents and resources in their design process.
+      </p>
+      <p>
+        For more information, see 
+        <a href="https://github.com/BenjaminHLee/ESG-2/tree/esg-flask-app">the
+        project's GitHub repository</a>. Contact your game administrator(s) 
+        with any questions or concerns, especially with regards to 
+        instance-specific issues (e.g. login issues, game initialization, 
+        config files, etc.). If you're an admin with questions or concerns of
+        your own, dm me @benjamin_lee on Telegram.
+      </p>
+    </div>
+  </div>
+  <div class="row">
+    <div style="border-top: 1px solid #eee;">
+      <h6 class="caps-header" style="margin-top: 2rem;">Config Files</h6>
+      <p>
+        <a href="{{ url_for('admin.uploaded_config_file', filename=
+        'portfolios.csv') }}">portfolios.csv</a>
+        <a href="{{ url_for('admin.uploaded_config_file', filename=
+        'schedule.csv') }}">schedule.csv</a>
+        <a href="{{ url_for('admin.uploaded_config_file', filename=
+        'game_settings.csv') }}">game_settings.csv</a>
+      </p>
+    </div>
+  </div>
+  
+
 
 
 {% endblock %}
