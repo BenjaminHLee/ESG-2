@@ -3,9 +3,7 @@ Prototype implementation of Electricity Strategy Game v2 based off of rules by V
 
 ## STATUS
 
-Backend: match/surpass ESG 1; fulfills ESG 2 reqs
-Frontend: in progress
-
+Complete CSV tool. Full support for base ESG game as well as adjustment bidding.
 
 ## PROGRAM EXPLANATION
 
