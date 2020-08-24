@@ -14,7 +14,6 @@ FEATURES:
 - Player dashboard
 
 TODO:
-- Landing/about page
 - Documentation
 - Inline documentation
 - Restyle code (consistently)
