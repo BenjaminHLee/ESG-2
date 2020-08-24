@@ -13,6 +13,7 @@ FEATURES:
 
 TODO:
 - Frontend adjustment bidding (required for full ESG-2 support)
+- Fix instancing — move instance-specific .csv files to instance folder
 - Documentation
 - Inline documentation
 - Restyle code (consistently)
