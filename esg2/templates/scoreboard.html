@@ -1,23 +1,46 @@
 {% extends 'base.html' %}
-
+{% block title %}Scoreboard{% endblock %}
 {% block header %}
-  <h6 class="caps-header">{% block title %}Scoreboard{% endblock %}</h6>
 {% endblock %}
 
 {% block content %}
 {% if initialized %}
   <div>
+    <h6 class="caps-header">Hourly charts</h6>
+    <form method="GET" id="select-hourly-chart-form">
+      <input type="hidden" name="current-summary-view" value="{{ current_summary_view }}">
+      <select name="hour-select" id="hour-select" onchange="this.form.submit()">
+        {% for hour in hours %}
+          {% if hour == chart_r_h[0] ~ '/' ~ chart_r_h[1] %}
+          <option value="{{ hour }}" selected>{{ hour }}</option>
+          {% else %}
+          <option value="{{ hour }}">{{ hour }}</option>
+          {% endif %}
+        {% endfor %}
+      </select>
+    </form>
+    {{ resources | safe }}
+    <div id="hourly-chart" style="margin-bottom: 2rem"></div>
+    <script>
+    fetch('/plot/r{{ chart_r_h[0] }}h{{ chart_r_h[1] }}')
+      .then(function(response) { return response.json(); })
+      .then(function(item) { return Bokeh.embed.embed_item(item); })
+    </script>
+  </div>
+  <div style="border-top: 1px solid #eee;">
+    <h6 class="caps-header" style="margin-top: 2rem;">Game summary</h6>
     <p><a href="{{ url_for('scoreboard.engine_file', filename='summary.csv') }}">summary.csv</a></p>
     <style>
       select, form {margin-bottom: 0;}
     </style>
-    <form method="get">
+    <form method="GET" id="select-summary-sort-form">
+      <input type="hidden" id="current_r" name="current_r" value="{{ chart_r_h[0] }}">
+      <input type="hidden" id="current_h" name="current_h" value="{{ chart_r_h[1] }}">
       <select name="sort" onchange="this.form.submit()">
-        <option value="" selected disabled hidden>{{ current_summary_view }}</option>
-        <option value="balance">Balance</option>
-        <option value="revenue">Revenue</option>
-        <option value="cost">Losses</option>
-        <option value="profit">Profit</option>
+        <option value="balance" {% if current_summary_view == 'Balance' %}selected{% endif %}>Balance</option>
+        <option value="revenue" {% if current_summary_view == 'Revenue' %}selected{% endif %}>Revenue</option>
+        <option value="cost" {% if current_summary_view == 'Losses' %}selected{% endif %}>Losses</option>
+        <option value="profit" {% if current_summary_view == 'Profit' %}selected{% endif %}>Profit</option>
       </select>
     </form>
     <div class="row">

@@ -10,7 +10,7 @@ from flask import (
 from esg2 import CSV_FOLDER, CONFIG_FOLDER
 from esg2.db import get_db
 from esg2.auth import admin_login_required
-from esg2.utilities import bid_base_r_h_to_header, get_game_setting, get_portfolio_names_list
+from esg2.utilities import bid_base_r_h_to_header, get_game_setting, get_portfolio_names_list, first_incomplete_summary_row
 from . import engine
 
 bp = Blueprint('admin', __name__, url_prefix='')
@@ -230,18 +230,23 @@ def admin_dashboard():
         '''SELECT name FROM sqlite_master WHERE type='table' AND name='bids' '''
     ).fetchone() is None:
         return render_template('/admin/dashboard.html', initialized=False)
-    else:
-        bids_df = get_pending_bids().sort_values(['unit_id'], ascending=True)
-        bids_df = bids_df.where(bids_df.notnull(), None)
-        unit_names_df = bids_df[['portfolio_name', 'unit_name', 'unit_id']]
-        # ASSUMING NO ADJUSTMENT BIDS — TODO: ADD SUPPORT FOR BY PORTFOLIO/BY PLANT ADJUST
-        adjustment = get_game_setting('adjustment')
-        base_bids_df = bids_df.filter(regex=("bid_base_.*"))
-        name_base_bids_df = pd.concat([unit_names_df, base_bids_df], axis=1, sort=False)
-        pretty_headers = [bid_base_r_h_to_header(s) for s in base_bids_df.columns]
+
+    summary_df = pd.read_csv(os.path.join(CSV_FOLDER, 'summary.csv'))
+    bids_df = get_pending_bids().sort_values(['unit_id'], ascending=True)
+    bids_df = bids_df.where(bids_df.notnull(), None)
+    unit_names_df = bids_df[['portfolio_name', 'unit_name', 'unit_id']]
+    # ASSUMING NO ADJUSTMENT BIDS — TODO: ADD SUPPORT FOR BY PORTFOLIO/BY PLANT ADJUST
+    adjustment = get_game_setting('adjustment')
+    base_bids_df = bids_df.filter(regex=("bid_base_.*"))
+    name_base_bids_df = pd.concat([unit_names_df, base_bids_df], axis=1, sort=False)
+    pretty_headers = [bid_base_r_h_to_header(s) for s in base_bids_df.columns]
+
+    next_r_h = first_incomplete_summary_row(summary_df)
+
     kwargs = {
         'initialized':True,
         'bids':name_base_bids_df,
+        'next_r_h':next_r_h,
         'adjustment':adjustment,
         'pretty_headers':pretty_headers
     }

@@ -98,12 +98,6 @@ def get_portfolio_bids(portfolio_id):
     bids_df = pd.read_sql_query('SELECT * FROM bids WHERE portfolio_id=' + str(portfolio_id), db)
     return bids_df
 
-def write_portfolio_bids(bids):
-    """Takes a Pandas DataFrame representing bids and writes to the bids table"""
-    db = get_db()
-    for unit_row in bids.itertuples():
-        unit_id = unit_row['unit_id']
-
 def form_entry_to_tuple(key, value):
     """Takes in a key of the form "id-{id}-header-{header}" and a value; 
     returns a tuple ({id}, {header}, value) """

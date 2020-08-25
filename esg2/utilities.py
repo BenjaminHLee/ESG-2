@@ -39,3 +39,36 @@ def get_initialized_portfolio_ids_list():
     players_df = pd.read_csv(os.path.join(CSV_FOLDER, 'players.csv'))
     names = players_df['portfolio_id'].unique()
     return names
+
+def last_filled_summary_row(summary_df):
+    """Returns the round and hour of the last fully-completed row in summary_df.
+    If a round is not found, default to r=1, h=1"""
+    r = 1
+    h = 1
+    summary_df = summary_df.sort_values(by=['round', 'hour'], ascending=[True, True])
+    for _, row in summary_df.iterrows():
+        if not row.isnull().values.any():
+            r = row['round']
+            h = row['hour']
+    return r, h
+
+def first_incomplete_summary_row(summary_df):
+    """Returns the round and hour of the first not-fully-completed row in summary_df.
+    If a round is not found, defaults to the last row and hour"""
+    r = 1
+    h = 1
+    summary_df = summary_df.sort_values(by=['round', 'hour'], ascending=[True, True])
+    for _, row in summary_df.iterrows():
+        r = row['round']
+        h = row['hour']
+        if row.isnull().values.any():
+            return r, h
+    return r, h
+
+
+def round_hour_names(schedule_df):
+    """Returns a list of strings in the form r/h for each r, h in schedule_df"""
+    names = []
+    for (r, h) in schedule_df[['round', 'hour']].itertuples(index=False):
+        names.append(f"{r}/{h}")
+    return names

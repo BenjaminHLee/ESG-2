@@ -14,7 +14,11 @@
     <label for="hour-select">Select Hour</label>
     <select name="hour-select" id="hour-select">
       {% for hour in pretty_headers %}
-      <option value="{{ hour }}">{{ hour }}</option>
+        {% if hour == next_r_h[0] ~ '/' ~ next_r_h[1] %}
+        <option value="{{ hour }}" selected>{{ hour }}</option>
+        {% else %}
+        <option value="{{ hour }}">{{ hour }}</option>
+        {% endif %}
       {% endfor %}
     </select>
     <input class="button-primary" type="submit" name="run-hour" value="Run Hour" onclick="return confirmselect();">
