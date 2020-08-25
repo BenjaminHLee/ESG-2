@@ -1,5 +1,5 @@
 # ESG-2
-Flask app is at MVP status. Supports ESG-1 games. No pretty charts yet.
+Flask app is at MVP status. Supports ESG-1 games. Pretty hourly charts!
 
 FEATURES:
 - Full web app
@@ -8,8 +8,9 @@ FEATURES:
 - Player management via web app
 - Configurable setting files
 - Admin dashboard
-- Scoreboard
 - Player dashboard
+- Scoreboard
+- Pretty charts
 
 TODO:
 - Frontend adjustment bidding (required for full ESG-2 support)
@@ -18,7 +19,6 @@ TODO:
 - Inline documentation
 - Restyle code (consistently)
 - Improve logging
-- Pretty charts
 - Add guide for building/deploying
 
 ## Admin guide
