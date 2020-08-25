@@ -33,6 +33,7 @@ Until then, take the following steps:
   * `pip install Flask`
   * `pip install pandas`
   * `pip install WTForms`
+  * `pip install bokeh==2.1.1` (Note: Bokeh 2.2.0 features a bug that may cause chart tooltips to fail. Be sure to install version 2.1.1!)
  4. Set FLASK-APP
   * `export FLASK-APP=ESG-2`
  5. Run the app!
