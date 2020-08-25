@@ -31,7 +31,6 @@ Until then, take the following steps:
 2. [Spin up a virtual environment](https://flask.palletsprojects.com/en/1.1.x/installation/#virtual-environments)
 3. Install dependencies
   * `pip install Flask`
-  * `pip install numpy`
   * `pip install pandas`
   * `pip install WTForms`
  4. Set FLASK-APP
