@@ -18,6 +18,7 @@ from flask import (
 
 from bokeh.embed import json_item
 from bokeh.models import ColumnDataSource, HoverTool
+from bokeh.palettes import magma, viridis
 from bokeh.plotting import figure
 from bokeh.resources import CDN
 
@@ -138,7 +139,7 @@ def engine_file(filename):
 def hourly_file(r, h):
     return send_from_directory(HOURLY_FOLDER, "round_" + r + "_hour_" + h + ".csv")
 
-@bp.route('/plot/r<r>h<h>')
+@bp.route('/plot/hourly/r<r>h<h>')
 def plot(r, h):
     try:
         p = create_hour_chart(int(r), int(h))
@@ -150,6 +151,8 @@ def create_hour_chart(r, h):
     """Create a Bokeh chart of the supply and demand curves given a round and hour"""
 
     colors = ['#57BCCD', '#3976AF', '#F08636', '#529D3F', '#C63A33', '#8D6AB8', '#85594E', '#D57EBF']
+    # colors = magma(7)
+    # colors = viridis(7)
 
     # Read corresponding hourly csv (assume it exists)
     hourly_df = pd.read_csv(os.path.join(HOURLY_FOLDER, "round_" + str(r) + "_hour_" + str(h) + ".csv"))
@@ -168,7 +171,7 @@ def create_hour_chart(r, h):
         supply_curve_data['portfolio_name'].append(row['portfolio_name'])
         supply_curve_data['unit_name'].append(row['unit_name'])
         supply_curve_data['bid'].append("{:0.2f}".format(y))
-        supply_curve_data['color'].append(colors[int(row['portfolio_id']) - 1])
+        supply_curve_data['color'].append(colors[int(row['portfolio_id']) - 1 % len(colors)])
         mwh_running_total += float(row['unit_capacity'])
 
     cds = ColumnDataSource(supply_curve_data)

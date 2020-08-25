@@ -22,7 +22,7 @@
     {{ resources | safe }}
     <div id="hourly-chart" style="margin-bottom: 2rem"></div>
     <script>
-    fetch('/plot/r{{ chart_r_h[0] }}h{{ chart_r_h[1] }}')
+    fetch('/plot/hourly/r{{ chart_r_h[0] }}h{{ chart_r_h[1] }}')
       .then(function(response) { return response.json(); })
       .then(function(item) { return Bokeh.embed.embed_item(item); })
     </script>
