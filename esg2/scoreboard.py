@@ -139,8 +139,8 @@ def engine_file(filename):
 def hourly_file(r, h):
     return send_from_directory(HOURLY_FOLDER, "round_" + r + "_hour_" + h + ".csv")
 
-@bp.route('/plot/hourly/r<r>h<h>')
-def plot(r, h):
+@bp.route('/chart/hourly/r<r>h<h>')
+def hourly_chart(r, h):
     try:
         p = create_hour_chart(int(r), int(h))
         return json.dumps(json_item(p, "hourly-chart"))
