@@ -17,15 +17,17 @@ from flask import (
 )
 
 from bokeh.embed import json_item
-from bokeh.models import ColumnDataSource, HoverTool
+from bokeh.models import ColumnDataSource, HoverTool, NumeralTickFormatter, FuncTickFormatter
 from bokeh.palettes import magma, viridis
 from bokeh.plotting import figure
 from bokeh.resources import CDN
 
 from esg2 import CSV_FOLDER, HOURLY_FOLDER, CONFIG_FOLDER
 from esg2.db import get_db
-from esg2.utilities import get_game_setting, last_filled_summary_row, round_hour_names
-
+from esg2.utilities import (
+    get_game_setting, last_filled_summary_row, round_hour_names, get_portfolio_name_by_id, 
+    get_starting_money_by_portfolio_id
+)
 
 bp = Blueprint('scoreboard', __name__, url_prefix='')
 
@@ -121,7 +123,7 @@ def id_to_header(portfolio_id):
         ).fetchone()
         return username + '<br><span style="font-weight: normal;">' + portfolio + '</span>'
     except:
-        return portfolio_id
+        return '<br><span style="font-weight: normal;">' + get_portfolio_name_by_id(portfolio_id)
 
 def r_h_column_to_linked_html(row):
     r = str(int(row["Day"]))
@@ -142,20 +144,21 @@ def hourly_file(r, h):
 @bp.route('/chart/hourly/r<r>h<h>')
 def hourly_chart(r, h):
     try:
-        p = create_hour_chart(int(r), int(h))
+        hourly_df = pd.read_csv(os.path.join(HOURLY_FOLDER, "round_" + str(r) + "_hour_" + str(h) + ".csv"))
+        schedule_df = pd.read_csv(os.path.join(CONFIG_FOLDER, 'schedule.csv'))
+        p = create_hour_chart(schedule_df, hourly_df, int(r), int(h))
         return json.dumps(json_item(p, "hourly-chart"))
     except(FileNotFoundError):
-        return "Bad request"
+        return "Bad request. Has the game been initialized?"
 
-def create_hour_chart(r, h):
-    """Create a Bokeh chart of the supply and demand curves given a round and hour"""
+def create_hour_chart(schedule_df, hourly_df, r, h):
+    """Creates a Bokeh chart of the supply and demand curves given a round and hour"""
 
     colors = ['#57BCCD', '#3976AF', '#F08636', '#529D3F', '#C63A33', '#8D6AB8', '#85594E', '#D57EBF']
     # colors = magma(7)
     # colors = viridis(7)
 
     # Read corresponding hourly csv (assume it exists)
-    hourly_df = pd.read_csv(os.path.join(HOURLY_FOLDER, "round_" + str(r) + "_hour_" + str(h) + ".csv"))
     # Sort by base_bid, secondary sort by unit_id
     hourly_df = hourly_df.sort_values(by=['bid_base', 'unit_id'], ascending=[True, True])
 
@@ -197,9 +200,6 @@ def create_hour_chart(r, h):
                                   ('$/MWh', '@bid')
                               ]))
 
-    # read schedule.csv (assume it exists)
-    schedule_df = pd.read_csv(os.path.join(CONFIG_FOLDER, 'schedule.csv'))
-
     current_row = schedule_df[schedule_df['round'] == r][schedule_df['hour'] == h]
     net = current_row.iloc[0]['net']
     slope = current_row.iloc[0]['slope']
@@ -226,7 +226,7 @@ def create_hour_chart(r, h):
     intercept_circle = chart.circle('x', 'y', color='black', size=6, source=intercept)
 
     chart.add_tools(HoverTool(renderers=[intercept_circle], point_policy='snap_to_data', attachment='below',
-                              tooltips=[("", "(@x{(0.00)} MWh, @y{(0.00)} $/MWh)"),]))
+                              tooltips=[("", "(@x{0.00} MWh, @y{0.00} $/MWh)"),]))
 
 
     chart.toolbar.active_drag = None
@@ -283,3 +283,96 @@ def get_supply_demand_intercept(hourly_df, schedule_df, r, h):
                 running_production += unit_production
 
     return (running_production, intercept_price)
+
+@bp.route('/chart/summary')
+def summary_chart():
+    try:
+        summary_df = pd.read_csv(os.path.join(CSV_FOLDER, 'summary.csv'))
+        p = create_summary_chart(summary_df)
+        return json.dumps(json_item(p, "summary-chart"))
+    except(FileNotFoundError):
+        return "Bad request. Has the game been initialized?"
+
+def create_summary_chart(summary_df):
+    """Creates a Bokeh chart of the current standings in summary.csv"""
+
+    summary_df = summary_df.sort_values(by=['round', 'hour'], ascending=[True, True])
+    header_suffix = 'balance' # I suppose this could change if we wanted summary charts of other things?
+    selected_columns = summary_df.filter(regex=(".*_" + header_suffix))
+    colors = ['#57BCCD', '#3976AF', '#F08636', '#529D3F', '#C63A33', '#8D6AB8', '#85594E', '#D57EBF']
+    r_h = summary_df[['round', 'hour']]
+
+    extract_id = lambda header: int(re.search('player_(.*)_' + header_suffix, header).group(1))
+
+    summary_lines_data = defaultdict(list)
+
+    # When no hours have been run, lines will not appear (as they won't have a second point to be
+    # defined with, so we create a series of points as well)
+    draw_starting_points = False
+    starting_money_points_data = defaultdict(list)
+
+    for column in selected_columns.columns:
+        portfolio_id = extract_id(column)
+        starting_money = get_starting_money_by_portfolio_id(portfolio_id)
+
+        # Add initial balance datapoint to lines (post-auction pre-spot markets)
+        ys = [starting_money] + selected_columns[column].tolist()
+        xs = list(range(len(ys)))
+        name = get_portfolio_name_by_id(portfolio_id)
+        summary_lines_data['xs'].append(xs)
+        summary_lines_data['ys'].append(ys)
+        summary_lines_data['id'].append(name)
+        summary_lines_data['color'].append(colors[portfolio_id - 1 % len(colors)])
+
+        # If there aren't enough values in the column to draw a line, add it to the points dict
+        if selected_columns[column].isnull().all():
+            draw_starting_points = True
+            starting_money_points_data['x'].append(0)
+            starting_money_points_data['y'].append(starting_money)
+            starting_money_points_data['id'].append(name)
+            starting_money_points_data['color'].append(colors[portfolio_id - 1 % len(colors)])
+
+
+    cds = ColumnDataSource(summary_lines_data)
+
+    chart_title = "Net balance by portfolio"
+
+    chart = figure(title=chart_title, x_axis_label='Day/Hour', y_axis_label='Net Balance',
+                   sizing_mode='stretch_width', height=300, title_location='above')
+
+    summary_lines = chart.multi_line(xs='xs', ys='ys', line_width=4, line_color='color', line_alpha=0.6,
+                                     hover_line_color='color', hover_line_alpha=1.0, source=cds)
+
+    chart.add_tools(HoverTool(renderers=[summary_lines], show_arrow=False, line_policy='nearest',
+                              point_policy='follow_mouse', attachment='above', tooltips=[
+                                  ('Portfolio', '@id'),
+                                  ('Balance', '$data_y{0,0.00}')
+                              ]))
+
+    if draw_starting_points:
+        cds_circles = ColumnDataSource(starting_money_points_data)
+
+        starting_circles = chart.circle('x', 'y', size=4, color='color', alpha=0.6, hover_color='color', hover_alpha=1.0, source=cds_circles)
+
+        chart.add_tools(HoverTool(renderers=[starting_circles], show_arrow=False,
+                                point_policy='follow_mouse', attachment='above', tooltips=[
+                                    ('Portfolio', '@id'),
+                                    ('Balance', '$data_y{0,0.00}')
+                                ]))
+
+
+    chart.yaxis[0].formatter = NumeralTickFormatter(format="0[.]0 a")
+    # For more on Bokeh formatting, see https://docs.bokeh.org/en/latest/docs/reference/models/formatters.html#bokeh.models.formatters.NumeralTickFormatter
+    
+    # Add 1 for initial balance datapoint (post-auction pre-spot markets)
+    chart.xaxis.ticker = list(range(len(r_h) + 1)) 
+    r_h_names = ['0'] + round_hour_names(r_h)
+    formatter_code = '''
+        var tick_labels = {labels};
+        return tick_labels[tick]
+    '''.format(labels=r_h_names)
+    chart.xaxis.formatter = FuncTickFormatter(code=formatter_code)
+
+    chart.toolbar.active_drag = None
+
+    return chart

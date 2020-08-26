@@ -28,6 +28,15 @@
     </script>
   </div>
   <div style="border-top: 1px solid #eee;">
+    <h6 class="caps-header" style="margin-top: 2rem;">Standings</h6>
+    <div id="summary-chart" style="margin-bottom: 2rem"></div>
+    <script>
+    fetch('/chart/summary')
+      .then(function(response) { return response.json(); })
+      .then(function(item) { return Bokeh.embed.embed_item(item); })
+    </script>
+  </div>
+  <div style="border-top: 1px solid #eee;">
     <h6 class="caps-header" style="margin-top: 2rem;">Game summary</h6>
     <p><a href="{{ url_for('scoreboard.engine_file', filename='summary.csv') }}">summary.csv</a></p>
     <style>
@@ -72,6 +81,7 @@
     </div>
   </div>
 {% else %}
+<h6 class="caps-header">Scoreboard</h6>
 The game has not yet been initialized. An administrator can initialize the game via their config panel.
 {% endif %}  
 {% endblock %}

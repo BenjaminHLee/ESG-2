@@ -473,7 +473,7 @@ def update_summary(r, h, summary_df, players_df):
         if (summary_df.loc[(summary_df['round'] == r) & (summary_df['hour'] == h)].index.values.astype(int)[0] == 0):
             # if round/hour row is at the top of the table, factor in starting money from players_df (multiplied by interest rate)
             balance = ((1 + float(get_game_setting('interest rate'))) * 
-                       players_df.loc[(players_df['portfolio_id'] == portfolio_id),'starting_money'].values.astype(int)[0]) + profits
+                       players_df.loc[(players_df['portfolio_id'] == portfolio_id),'starting_money'].values.astype(float)[0]) + profits
         else:
             # otherwise, look at the value above and add profits (multiplied by interest rate)
             current_row_index = summary_df.loc[(summary_df['round'] == r) & (summary_df['hour'] == h)].index.values.astype(int)[0]

@@ -26,6 +26,18 @@ def get_portfolio_names_list():
     portfolios = portfolios_df['portfolio_name'].unique()
     return portfolios
 
+def get_portfolio_name_by_id(i):
+    """Reads portfolios.csv and returns the portfolio_name with portfolio_id == id"""
+    portfolios_df = pd.read_csv(os.path.join(CONFIG_FOLDER, 'portfolios.csv'))
+    portfolio_name = portfolios_df.loc[portfolios_df['portfolio_id'] == i]['portfolio_name'].unique().item()
+    return portfolio_name
+
+def get_starting_money_by_portfolio_id(i):
+    """Reads players.csv and returns the starting_money value where portfolio_id == i"""
+    players_df = pd.read_csv(os.path.join(CSV_FOLDER, 'players.csv'))
+    return players_df.loc[(players_df['portfolio_id'] == i),'starting_money'].values.astype(float)[0]
+
+
 def get_initialized_portfolio_names_list():
     """Reads players and returns the list of portfolio names with an initialized player
     (i.e. the list of portfolios that are involved in the initialized game)"""
@@ -64,7 +76,6 @@ def first_incomplete_summary_row(summary_df):
         if row.isnull().values.any():
             return r, h
     return r, h
-
 
 def round_hour_names(schedule_df):
     """Returns a list of strings in the form r/h for each r, h in schedule_df"""
