@@ -43,54 +43,29 @@ def scoreboard():
     summary_df = pd.read_csv(os.path.join(CSV_FOLDER, 'summary.csv'))
     schedule_df = pd.read_csv(os.path.join(CONFIG_FOLDER, 'schedule.csv'))
 
-    if request.args.get('sort', ''):
-        suffix = request.args.get('sort', '')
-        (headings, table) = create_summary_subtable(summary_df, suffix)
-        view_names = {"balance": "Balance", "revenue": "Revenue", "cost": "Losses", "profit": "Profit"}
-        current_view_name = view_names.get(suffix, '')
-        current_r = request.args.get('current_r')
-        current_h = request.args.get('current_h')
-        current_r_h = (int(current_r), int(current_h))
-        kwargs = {
-            'initialized':True,
-            'chart_r_h':current_r_h,
-            'hours':round_hour_names(schedule_df),
-            'resources':CDN.render(),
-            'summary_table_headers':headings,
-            'summary_table':table, 
-            'current_summary_view':current_view_name
-        }
-        return render_template('scoreboard.html', **kwargs)
-    elif request.args.get('hour-select', ''):
-        r_h_name = request.args.get('hour-select', '')
-        r, h = r_h_name.split('/')
-        chart_r_h = (int(r), int(h))
-        current_view_name = request.args.get('current-summary-view')
-        inverse_view_names = {"Balance": "balance", "Revenue": "revenue", "Losses": "cost", "Profit": "profit"}
-        current_view = inverse_view_names.get(current_view_name, '')
-        (headings, table) = create_summary_subtable(summary_df, current_view)
-        kwargs = {
-            'initialized':True,
-            'chart_r_h':chart_r_h,
-            'hours':round_hour_names(schedule_df),
-            'resources':CDN.render(),
-            'summary_table_headers':headings,
-            'summary_table':table,
-            'current_summary_view':current_view_name
-        }
-        return render_template('scoreboard.html', **kwargs)
+    # Default value if request args are not provided
+    r, h = last_filled_summary_row(summary_df)
+    chart_r_h = f'{r}/{h}'
+    (headings, table) = create_summary_subtable(summary_df, "balance")
+    current_view_name = 'Balance'
 
-    default_r_h = last_filled_summary_row(summary_df)
-    (balances_heading, balances_table) = create_summary_subtable(summary_df, "balance")
+    if request.args.get('summary-view', ''):
+        current_view_name = request.args.get('summary-view', '')
+        suffix_lookup = {"Balance": "balance", "Revenue": "revenue", "Losses": "cost", "Profit": "profit"}
+        suffix = suffix_lookup[current_view_name]
+        (headings, table) = create_summary_subtable(summary_df, suffix)
+
+    if request.args.get('hour-r-h', ''):
+        chart_r_h = request.args.get('hour-r-h', '')
 
     kwargs = {
         'initialized':True,
-        'chart_r_h':default_r_h,
+        'chart_r_h':chart_r_h,
         'hours':round_hour_names(schedule_df),
         'resources':CDN.render(),
-        'summary_table_headers':balances_heading,
-        'summary_table':balances_table, 
-        'current_summary_view':'Balance'
+        'summary_table_headers':headings,
+        'summary_table':table, 
+        'current_summary_view':current_view_name
     }
     return render_template('scoreboard.html', **kwargs)
 

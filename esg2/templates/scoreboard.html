@@ -8,21 +8,21 @@
   <div>
     <h6 class="caps-header">Hourly charts</h6>
     <form method="GET" id="select-hourly-chart-form">
-      <input type="hidden" name="current-summary-view" value="{{ current_summary_view }}">
-      <select name="hour-select" id="hour-select" onchange="this.form.submit()">
+      <select name="hour-r-h" onchange="this.form.submit()">
         {% for hour in hours %}
-          {% if hour == chart_r_h[0] ~ '/' ~ chart_r_h[1] %}
+          {% if hour == chart_r_h %}
           <option value="{{ hour }}" selected>{{ hour }}</option>
           {% else %}
           <option value="{{ hour }}">{{ hour }}</option>
           {% endif %}
         {% endfor %}
       </select>
+      <input type="hidden" name="summary-view" value="{{ current_summary_view }}">
     </form>
     {{ resources | safe }}
     <div id="hourly-chart" style="margin-bottom: 2rem"></div>
     <script>
-    fetch('/chart/hourly/r{{ chart_r_h[0] }}h{{ chart_r_h[1] }}')
+    fetch("/chart/hourly/r{{ chart_r_h.split('/')[0] }}h{{ chart_r_h.split('/')[1] }}")
       .then(function(response) { return response.json(); })
       .then(function(item) { return Bokeh.embed.embed_item(item); })
     </script>
@@ -43,13 +43,12 @@
       select, form {margin-bottom: 0;}
     </style>
     <form method="GET" id="select-summary-sort-form">
-      <input type="hidden" id="current_r" name="current_r" value="{{ chart_r_h[0] }}">
-      <input type="hidden" id="current_h" name="current_h" value="{{ chart_r_h[1] }}">
-      <select name="sort" onchange="this.form.submit()">
-        <option value="balance" {% if current_summary_view == 'Balance' %}selected{% endif %}>Balance</option>
-        <option value="revenue" {% if current_summary_view == 'Revenue' %}selected{% endif %}>Revenue</option>
-        <option value="cost" {% if current_summary_view == 'Losses' %}selected{% endif %}>Losses</option>
-        <option value="profit" {% if current_summary_view == 'Profit' %}selected{% endif %}>Profit</option>
+      <input type="hidden" name="hour-r-h" value="{{ chart_r_h }}">
+      <select name="summary-view" onchange="this.form.submit()">
+        <option value="Balance" {% if current_summary_view == 'Balance' %}selected{% endif %}>Balance</option>
+        <option value="Revenue" {% if current_summary_view == 'Revenue' %}selected{% endif %}>Revenue</option>
+        <option value="Losses" {% if current_summary_view == 'Losses' %}selected{% endif %}>Losses</option>
+        <option value="Profit" {% if current_summary_view == 'Profit' %}selected{% endif %}>Profit</option>
       </select>
     </form>
     <div class="row">
