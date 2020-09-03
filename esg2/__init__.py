@@ -30,14 +30,6 @@ def create_app(test_config=None):
     except OSError:
         pass
 
-    # prevent caching
-    @app.after_request
-    def add_header(r):
-        r.headers["Cache-Control"] = "no-cache, no-store, must-revalidate, max-age=0"
-        r.headers["Pragma"] = "no-cache"
-        r.headers["Expires"] = "0"
-        return r
-
     from . import db
     db.init_app(app)
 
