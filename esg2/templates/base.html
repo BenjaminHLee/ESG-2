@@ -24,12 +24,12 @@
           <li class="navbar-item"><a class="navbar-link" href="{{ url_for('admin.admin_dashboard') }}">Dashboard</a></li>
           <li class="navbar-item"><a class="navbar-link" href="{{ url_for('admin.config') }}">Config</a></li>
           <li class="navbar-item-right"><a class="navbar-link" href="{{ url_for('auth.logout') }}">Log Out</a></li>
-          <li class="navbar-item-right"><span class="navbar-link">{{ g.user['usertype'] }}</span></li>
+          <li class="navbar-item-right"><span class="navbar-name">{{ g.user['usertype'] }}</span></li>
         {% elif g.user['usertype'] == "player" %}
           <li class="navbar-item"><a class="navbar-link" href="{{ url_for('scoreboard.scoreboard') }}">Scoreboard</a></li>
           <li class="navbar-item"><a class="navbar-link" href="{{ url_for('player.player_dashboard') }}">Dashboard</a></li>
           <li class="navbar-item-right"><a class="navbar-link" href="{{ url_for('auth.logout') }}">Log Out</a></li>
-          <li class="navbar-item-right"><span class="navbar-link">{{ g.user['username'] }}</span></li>
+          <li class="navbar-item-right"><span class="navbar-name">{{ g.user['username'] }}</span></li>
         {% else %}
           <li class="navbar-item"><a class="navbar-link" href="{{ url_for('scoreboard.scoreboard') }}">Scoreboard</a></li>
           <li class="navbar-item"><a class="navbar-link" href="{{ url_for('about') }}">About</a></li>
@@ -56,24 +56,52 @@
   <nav class="mobile-nav" id="mobile-nav">
     <div class="container">
       <div id="mobile-nav-links">
-        <table>
-          <tr>
-            <td class="nav-td-left"><a class="nav-link" href="{{ url_for('about') }}">About</a></td>
-            <td class="nav-td-right"></td>
-          </tr>
-          <tr>
-            <td class="nav-td-left"><a class="nav-link" href="{{ url_for('scoreboard.scoreboard') }}">Scoreboard</a></td>
-            <td class="nav-td-right"></td>
-          </tr>
-          <tr>
-            <td class="nav-td-left"><a class="nav-link" href="{{ url_for('admin.admin_dashboard') }}">Dashboard</a></td>
-            <td class="nav-td-right"><span class="nav-link">{{ g.user['usertype'] }}</span></td>
-          </tr>
-          <tr>
-            <td class="nav-td-left"><a class="nav-link" href="{{ url_for('admin.config') }}">Config</a></td>
-            <td class="nav-td-right"><a class="nav-link" href="{{ url_for('auth.logout') }}">Log Out</a></td>
-          </tr>
-        </table>
+        {% if g.user['usertype'] == "admin" %}
+          <table>
+            <tr>
+              <td class="nav-td-left"><a class="nav-link" href="{{ url_for('about') }}">About</a></td>
+              <td class="nav-td-right"></td>
+            </tr>
+            <tr>
+              <td class="nav-td-left"><a class="nav-link" href="{{ url_for('scoreboard.scoreboard') }}">Scoreboard</a></td>
+              <td class="nav-td-right"></td>
+            </tr>
+            <tr>
+              <td class="nav-td-left"><a class="nav-link" href="{{ url_for('admin.admin_dashboard') }}">Dashboard</a></td>
+              <td class="nav-td-right"><span class="nav-name">{{ g.user['usertype'] }}</span></td>
+            </tr>
+            <tr>
+              <td class="nav-td-left"><a class="nav-link" href="{{ url_for('admin.config') }}">Config</a></td>
+              <td class="nav-td-right"><a class="nav-link" href="{{ url_for('auth.logout') }}">Log Out</a></td>
+            </tr>
+          </table>
+        {% elif g.user['usertype'] == "player" %}
+          <table>
+            <tr>
+              <td class="nav-td-left"><a class="nav-link" href="{{ url_for('about') }}">About</a></td>
+              <td class="nav-td-right"></td>
+            </tr>
+            <tr>
+              <td class="nav-td-left"><a class="nav-link" href="{{ url_for('scoreboard.scoreboard') }}">Scoreboard</a></td>
+              <td class="nav-td-right"><span class="nav-name">{{ g.user['username'] }}</span></td>
+            </tr>
+            <tr>
+              <td class="nav-td-left"><a class="nav-link" href="{{ url_for('admin.admin_dashboard') }}">Dashboard</a></td>
+              <td class="nav-td-right"><a class="nav-link" href="{{ url_for('auth.logout') }}">Log Out</a></td>
+            </tr>
+          </table>
+        {% else %}
+          <table>
+            <tr>
+              <td class="nav-td-left"><a class="nav-link" href="{{ url_for('about') }}">About</a></td>
+              <td class="nav-td-right"></td>
+            </tr>
+            <tr>
+              <td class="nav-td-left"><a class="nav-link" href="{{ url_for('scoreboard.scoreboard') }}">Scoreboard</a></td>
+              <td class="nav-td-right"><a class="nav-link" href="{{ url_for('auth.login') }}">Log In</a></td>
+            </tr>
+          </table>
+        {% endif %}
       </div>
     </div>
     <div class="opened-nav-svg-container">
