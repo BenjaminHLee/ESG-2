@@ -21,6 +21,7 @@ from bokeh.models import ColumnDataSource, HoverTool, NumeralTickFormatter, Func
 from bokeh.palettes import magma, viridis
 from bokeh.plotting import figure
 from bokeh.resources import CDN
+from bokeh.themes import built_in_themes
 
 from esg2 import CSV_FOLDER, HOURLY_FOLDER, CONFIG_FOLDER
 from esg2.db import get_db
@@ -48,15 +49,19 @@ def scoreboard():
     chart_r_h = f'{r}/{h}'
     (headings, table) = create_summary_subtable(summary_df, "balance")
     current_view_name = 'Balance'
+    scroll_to_id = None
 
     if request.args.get('summary-view', ''):
         current_view_name = request.args.get('summary-view', '')
         suffix_lookup = {"Balance": "balance", "Revenue": "revenue", "Losses": "cost", "Profit": "profit"}
-        suffix = suffix_lookup[current_view_name]
+        suffix = suffix_lookup.get(current_view_name, 'balance')
         (headings, table) = create_summary_subtable(summary_df, suffix)
 
     if request.args.get('hour-r-h', ''):
         chart_r_h = request.args.get('hour-r-h', '')
+
+    # if request.args.get('scroll-to', ''):
+    #     scroll_to_id = request.args.get('scroll-to', '')
 
     kwargs = {
         'initialized':True,
@@ -65,7 +70,8 @@ def scoreboard():
         'resources':CDN.render(),
         'summary_table_headers':headings,
         'summary_table':table, 
-        'current_summary_view':current_view_name
+        'current_summary_view':current_view_name,
+        'scroll_to_id':scroll_to_id
     }
     return render_template('scoreboard.html', **kwargs)
 
@@ -123,6 +129,7 @@ def hourly_chart(r, h):
         schedule_df = pd.read_csv(os.path.join(CONFIG_FOLDER, 'schedule.csv'))
         p = create_hour_chart(schedule_df, hourly_df, int(r), int(h))
         return json.dumps(json_item(p, "hourly-chart"))
+        # return json.dumps(json_item(p, "summary-chart", theme='dark_minimal'))
     except(FileNotFoundError):
         return "Bad request. Has the game been initialized?"
 

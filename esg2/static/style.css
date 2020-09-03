@@ -1,91 +1,155 @@
 .navbar {
-    display: none; }
+  display: none; 
+}
+
+.mobile-navbar {
+  display: none; 
+}
 
 .long-esg {
-    display: none; }
+  display: none; 
+}
   
 /* Larger than phone */
 @media (min-width: 550px) {
-    .header {
-      margin-top: 18rem; }
-    .value-props {
-      margin-top: 9rem;
-      margin-bottom: 7rem; }
-    .value-img {
-      margin-bottom: 1rem; }
-    .example-grid .column,
-    .example-grid .columns {
-      margin-bottom: 1.5rem; }
-    .docs-section {
-      padding: 6rem 0; }
-    .example-send-yourself-copy {
-      float: right;
-      margin-top: 12px; }
-    .example-screenshot-wrapper {
-      position: absolute;
-      width: 48%;
-      height: 100%;
-      left: 0;
-      max-height: none; }
+  .header {
+    margin-top: 18rem; }
+  .docs-section {
+    padding: 6rem 0; }
+}
+
+/* Title */
+@media (min-width: 900px) {
+  .long-esg {
+    display: block; }
+  .short-esg {
+    display: none; }
+}    
+
+/* Navbar */
+@media (min-width: 700px) {
+  .navbar {
+    border-top-width: 0; }
+  .navbar,
+  .navbar-spacer {
+    display: block;
+    width: 100%;
+    height: 6.5rem;
+    background: #fff;
+    z-index: 99;
+    border-top: 1px solid #eee;
+    border-bottom: 1px solid #eee; }
+  .navbar-spacer {
+    display: none; }
+  .navbar > .container {
+    width: 100%; }
+  .navbar-list {
+    list-style: none;
+    margin-bottom: 0; }
+  .navbar-item {
+    position: relative;
+    float: left;
+    margin-bottom: 0; }
+  .navbar-item-right {
+    position: relative;
+    float: right;
+    margin-bottom: 0; }
+  .navbar-link {
+    text-transform: uppercase;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .2rem;
+    margin-right: 35px;
+    text-decoration: none;
+    line-height: 6.5rem;
+    color: #222; }
+  .navbar-link.active {
+    color: #33C3F0; }
+  .has-docked-nav .navbar {
+    position: fixed;
+    top: 0;
+    left: 0; }
+  .has-docked-nav .navbar-spacer {
+    display: block; }
+  /* Re-overiding the width 100% declaration to match size of % based container */
+  .has-docked-nav .navbar > .container {
+    width: 80%; }
+}
+
+/* Mobile navbar */
+@media (max-width: 700px) {
+  .mobile-nav {
+    border-top-width: 0;
+    width: 100%;
+    overflow: hidden;
+    display: block;
+    position: relative;
+    z-index: 99;
+    background: #fff;  
+    border-top: 1px solid #eee;
+    border-bottom: 1px solid #eee; 
+    padding-bottom: 10px;
+    display: none;
   }
-  
-/* Larger than tablet */
-@media (min-width: 750px) {
-    /* Title */
-    .long-esg {
-      display: block; }
-    .short-esg {
-      display: none; }
+  .mobile-nav > .container {
+    width: 100%; 
+  }
+  .mobile-nav #mobile-nav-links {
+    margin-top: 3rem;
+  }
+  .mobile-nav .opened-nav-svg-container {
+    display: flex;
+    justify-content: center;
+  }
+  .opened-nav-svg {
+    padding: 10px;
+  }
+  .mobile-nav table {
+    margin-bottom: 0;
+    width: 100%;
+  }
+  .mobile-nav td {
+    padding: 0.5rem 0;
+    border: 0;
+  }
+  .nav-td-left {
+    text-align: left;
+  }
+  .nav-td-right {
+    text-align: right;
+  }
+  .nav-link {
+    text-transform: uppercase;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .2rem;
+    text-decoration: none;
+    color: #222; }
+  .nav-link.active {
+    color: #33C3F0; }
+  .mobile-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0; }
+  .mobile-nav > .container {
+    width: 80%; }
+  .minimized-nav-svg-container {
+    width: 100%;
+    position: fixed;
+    bottom: 10px;
+    left: 0;
+    display: flex;
+    justify-content: center;
+  }
+  .minimized-nav-svg {
+    z-index: 100;
+    background: #fff;
+    padding: 10px;
+    border: 1px solid #eee;
+  }
 }
-@media (min-width: 50px) {
-    /* Navbar */
-    .navbar + .docs-section {
-      border-top-width: 0; }
-    .navbar,
-    .navbar-spacer {
-      display: block;
-      width: 100%;
-      height: 6.5rem;
-      background: #fff;
-      z-index: 99;
-      border-top: 1px solid #eee;
-      border-bottom: 1px solid #eee; }
-    .navbar-spacer {
-      display: none; }
-    .navbar > .container {
-      width: 100%; }
-    .navbar-list {
-      list-style: none;
-      margin-bottom: 0; }
-    .navbar-item {
-      position: relative;
-      float: left;
-      margin-bottom: 0; }
-    .navbar-item-right {
-      position: relative;
-      float: right;
-      margin-bottom: 0; }
-    .navbar-link {
-      text-transform: uppercase;
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: .2rem;
-      margin-right: 35px;
-      text-decoration: none;
-      line-height: 6.5rem;
-      color: #222; }
-    .navbar-link.active {
-      color: #33C3F0; }
-    .has-docked-nav .navbar {
-      position: fixed;
-      top: 0;
-      left: 0; }
-    .has-docked-nav .navbar-spacer {
-      display: block; }
-    /* Re-overiding the width 100% declaration to match size of % based container */
-    .has-docked-nav .navbar > .container {
-      width: 80%; }
-}
+
+
 
 .esg-header {
   color: #ddd;

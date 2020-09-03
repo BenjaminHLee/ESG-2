@@ -5,7 +5,7 @@
 
 {% block content %}
 {% if initialized %}
-  <div>
+  <div id="hourly-chart-div">
     <h6 class="caps-header">Hourly charts</h6>
     <form method="GET" id="select-hourly-chart-form">
       <select name="hour-r-h" onchange="this.form.submit()">
@@ -18,6 +18,7 @@
         {% endfor %}
       </select>
       <input type="hidden" name="summary-view" value="{{ current_summary_view }}">
+      {# <input type="hidden" name="scroll-to" value="hourly-chart-div"> #}
     </form>
     {{ resources | safe }}
     <div id="hourly-chart" style="margin-bottom: 2rem"></div>
@@ -36,7 +37,7 @@
       .then(function(item) { return Bokeh.embed.embed_item(item); })
     </script>
   </div>
-  <div style="border-top: 1px solid #eee;">
+  <div id="summary-table-div" style="border-top: 1px solid #eee;">
     <h6 class="caps-header" style="margin-top: 2rem;">Game summary</h6>
     <p><a href="{{ url_for('scoreboard.engine_file', filename='summary.csv') }}">summary.csv</a></p>
     <style>
@@ -50,6 +51,7 @@
         <option value="Losses" {% if current_summary_view == 'Losses' %}selected{% endif %}>Losses</option>
         <option value="Profit" {% if current_summary_view == 'Profit' %}selected{% endif %}>Profit</option>
       </select>
+      {# <input type="hidden" name="scroll-to" value="summary-table-div"> #}
     </form>
     <div class="row">
       <div class="u-full-width">
@@ -79,6 +81,11 @@
       </div>  
     </div>
   </div>
+  {% if scroll_to_id %}
+  <script>
+      document.getElementById('{{ scroll_to_id }}').scrollIntoView();
+  </script>
+  {% endif %}
 {% else %}
 <h6 class="caps-header">Scoreboard</h6>
 The game has not yet been initialized. An administrator can initialize the game via their config panel.

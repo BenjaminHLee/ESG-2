@@ -36,57 +36,63 @@
   </div>
   <div style="border-top: 1px solid #eee; margin-bottom: 2rem;">
     <h6 class="caps-header" style="margin-top: 2rem;">Player Management</h6>
-    <table>
-      <script type="text/javascript">
-        function toggle_visibility(cl){
-          var els = document.getElementsByClassName(cl);
-          for(var i=0; i<els.length; ++i){
-            var s = els[i].style;
-            s.display = s.display==='none' ? 'block' : 'none';
-          };
-        }
-      </script>
-      <style>
-        select, input, form {margin-bottom: 0;}
-        .togglable-column {display: none;}
-      </style>
-      <tr>
-        <th><a onclick="toggle_visibility('togglable-column');">Edit</th>
-        <th>Username</th>
-        <th>Portfolio</th>
-        <th>Initial Balance</th>
-        <th><div class="togglable-column">Set Initial Balance</div></th>
-          <th><div class="togglable-column">Set Portfolio</div></th>
-          </tr>
-      {% for player in players %}
-      <tr>
-        <td>
-          <form class="togglable-column" action="{{ url_for('admin.delete_user') }}" method="post" onsubmit="return confirm('Are you sure you want to delete player {{ player['username'] }}? This action cannot be undone.');">
-            <input type="submit" name="{{ player['player_id'] }}" value="Delete">
-          </form>
-        </td>
-        <td>{{ player['username'] }}</td>
-        <td>{{ player['portfolio'] }}</td>
-        <td>{{ '{:.2f}'.format(player['starting_money']) }}</td>
-        <td>
-          <form class="togglable-column" action="{{ url_for('admin.set_starting_money') }}" method="post">
-            <input type="text" name="starting-money" placeholder="e.g. -2020.92">
-            <input type="submit" name="{{ player['player_id'] }}" value="Set Balance">
-          </form>
-        </td>
-        <td>
-          <form class="togglable-column" action="{{ url_for('admin.set_portfolio') }}" method="post">
-            <select name="portfolio" id="portfolio">
-              {% for (portfolio, _) in portfolio_choices %}
-              <option value="{{ portfolio }}">{{ portfolio }}</option>
-              {% endfor %}
-            </select>
-            <input type="submit" name="{{ player['player_id'] }}" value="Set Portfolio">
-          </form>
-        </td>
-      </tr>
-      {% endfor %}
-    </table>
+    <div class="row">
+      <div class="u-full-width">
+        <div class="scrolling-wrapper-flexbox">
+          <table>
+            <script type="text/javascript">
+              function toggle_visibility(cl){
+                var els = document.getElementsByClassName(cl);
+                for(var i=0; i<els.length; ++i){
+                  var s = els[i].style;
+                  s.display = s.display==='none' ? 'block' : 'none';
+                };
+              }
+            </script>
+            <style>
+              select, input, form {margin-bottom: 0;}
+              .togglable-column {display: none;}
+            </style>
+            <tr>
+              <th><a onclick="toggle_visibility('togglable-column');">Edit</th>
+              <th>Username</th>
+              <th>Portfolio</th>
+              <th>Initial Balance</th>
+              <th><div class="togglable-column">Set Initial Balance</div></th>
+                <th><div class="togglable-column">Set Portfolio</div></th>
+                </tr>
+            {% for player in players %}
+            <tr>
+              <td>
+                <form class="togglable-column" action="{{ url_for('admin.delete_user') }}" method="post" onsubmit="return confirm('Are you sure you want to delete player {{ player['username'] }}? This action cannot be undone.');">
+                  <input type="submit" name="{{ player['player_id'] }}" value="Delete">
+                </form>
+              </td>
+              <td>{{ player['username'] }}</td>
+              <td>{{ player['portfolio'] }}</td>
+              <td>{{ '{:.2f}'.format(player['starting_money']) }}</td>
+              <td>
+                <form class="togglable-column" action="{{ url_for('admin.set_starting_money') }}" method="post">
+                  <input type="text" name="starting-money" placeholder="e.g. -2020.92">
+                  <input type="submit" name="{{ player['player_id'] }}" value="Set Balance">
+                </form>
+              </td>
+              <td>
+                <form class="togglable-column" action="{{ url_for('admin.set_portfolio') }}" method="post">
+                  <select name="portfolio" id="portfolio">
+                    {% for (portfolio, _) in portfolio_choices %}
+                    <option value="{{ portfolio }}">{{ portfolio }}</option>
+                    {% endfor %}
+                  </select>
+                  <input type="submit" name="{{ player['player_id'] }}" value="Set Portfolio">
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+          </table>
+        </div>
+      </div>
+    </div>         
     <a href="{{ url_for('auth.register') }}">Add Player</a>
   </div>
   {% if initialized %}

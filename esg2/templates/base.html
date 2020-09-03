@@ -1,15 +1,19 @@
 <!doctype html>
 <title>{% block title %}{% endblock %} - ESG-2</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/skeleton/2.0.4/skeleton.css">
 <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
 <script src="{{ url_for('static', filename='navbar.js') }}"></script>
 <meta http-equiv="X-Clacks-Overhead" content="GNU Terry Pratchett" />
 
+
 <div class="container">
 
-  <h2 class="esg-header short-esg">ESG</h2>
-  <h2 class="esg-header long-esg">the Electricity Strategy Game</h2>
+  <div id="esg-header-div">
+    <h2 class="esg-header short-esg">ESG</h2>
+    <h2 class="esg-header long-esg">the Electricity Strategy Game</h2>
+  </div>
 
   <div class="navbar-spacer"></div>
   <nav class="navbar">
@@ -49,4 +53,46 @@
     {% endif %}
     {% block content %}{% endblock %}
   </section>
+  <nav class="mobile-nav" id="mobile-nav">
+    <div class="container">
+      <div id="mobile-nav-links">
+        <table>
+          <tr>
+            <td class="nav-td-left"><a class="nav-link" href="{{ url_for('about') }}">About</a></td>
+            <td class="nav-td-right"></td>
+          </tr>
+          <tr>
+            <td class="nav-td-left"><a class="nav-link" href="{{ url_for('scoreboard.scoreboard') }}">Scoreboard</a></td>
+            <td class="nav-td-right"></td>
+          </tr>
+          <tr>
+            <td class="nav-td-left"><a class="nav-link" href="{{ url_for('admin.admin_dashboard') }}">Dashboard</a></td>
+            <td class="nav-td-right"><span class="nav-link">{{ g.user['usertype'] }}</span></td>
+          </tr>
+          <tr>
+            <td class="nav-td-left"><a class="nav-link" href="{{ url_for('admin.config') }}">Config</a></td>
+            <td class="nav-td-right"><a class="nav-link" href="{{ url_for('auth.logout') }}">Log Out</a></td>
+          </tr>
+        </table>
+      </div>
+    </div>
+    <div class="opened-nav-svg-container">
+      <a href="javascript:void(0);" onclick="toggleMobileNav()">
+        <svg viewBox="0 0 100 60" width="24" height="24" class="opened-nav-svg">
+          <rect y="0%" width="100%" height="10%"></rect>
+          <rect y="45%" width="100%" height="10%"></rect>
+          <rect y="90%" width="100%" height="10%"></rect>
+        </svg>        
+      </a>
+    </div>
+  </nav>
+  <div class="minimized-nav-svg-container">
+    <a href="javascript:void(0);" onclick="toggleMobileNav()">
+      <svg viewBox="0 0 100 60" width="24" height="24" class="minimized-nav-svg">
+        <rect y="0%" width="100%" height="10%"></rect>
+        <rect y="45%" width="100%" height="10%"></rect>
+        <rect y="90%" width="100%" height="10%"></rect>
+      </svg>        
+    </a>
+  </div>
 </div>
