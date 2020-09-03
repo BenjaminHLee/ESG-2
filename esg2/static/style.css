@@ -146,12 +146,14 @@
     bottom: 10px;
     left: 0;
     display: flex;
-    justify-content: center; }
+    justify-content: center; 
+    pointer-events: none; }
   .minimized-nav-svg {
     z-index: 100;
     background: #fff;
     padding: 10px;
-    border: 1px solid #eee; }
+    border: 1px solid #eee; 
+    pointer-events: all; }
 }
 
 
