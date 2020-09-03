@@ -1,7 +1,8 @@
 <!doctype html>
 <title>{% block title %}{% endblock %} - ESG-2</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/skeleton/2.0.4/skeleton.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='normalize.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='skeleton.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
 <script src="{{ url_for('static', filename='navbar.js') }}"></script>
