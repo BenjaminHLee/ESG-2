@@ -1,7 +1,10 @@
 .navbar {
   display: none; }
 
-.mobile-navbar {
+.mobile-nav {
+  display: none; }
+
+.minimized-nav-svg-container {
   display: none; }
 
 .long-esg {
