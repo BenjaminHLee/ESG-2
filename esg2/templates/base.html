@@ -27,13 +27,13 @@
       <ul class="navbar-list">
         {% if g.user['usertype'] == "admin" %}
           <li class="navbar-item"><a class="navbar-link" href="{{ url_for('scoreboard.scoreboard') }}">Scoreboard</a></li>
-          <li class="navbar-item"><a class="navbar-link" href="{{ url_for('admin.admin_dashboard') }}">Dashboard</a></li>
+          <li class="navbar-item"><a class="navbar-link" href="{{ url_for('admin.admin_dashboard') }}">Run Hour</a></li>
           <li class="navbar-item"><a class="navbar-link" href="{{ url_for('admin.config') }}">Config</a></li>
           <li class="navbar-item-right"><a class="navbar-link" href="{{ url_for('auth.logout') }}">Log Out</a></li>
           <li class="navbar-item-right"><span class="navbar-name">{{ g.user['usertype'] }}</span></li>
         {% elif g.user['usertype'] == "player" %}
           <li class="navbar-item"><a class="navbar-link" href="{{ url_for('scoreboard.scoreboard') }}">Scoreboard</a></li>
-          <li class="navbar-item"><a class="navbar-link" href="{{ url_for('player.player_dashboard') }}">Dashboard</a></li>
+          <li class="navbar-item"><a class="navbar-link" href="{{ url_for('player.player_dashboard') }}">Bids</a></li>
           <li class="navbar-item-right"><a class="navbar-link" href="{{ url_for('auth.logout') }}">Log Out</a></li>
           <li class="navbar-item-right"><span class="navbar-name">{{ g.user['username'] }}</span></li>
         {% else %}
@@ -73,7 +73,7 @@
               <td class="nav-td-right"></td>
             </tr>
             <tr>
-              <td class="nav-td-left"><a class="nav-link" href="{{ url_for('admin.admin_dashboard') }}">Dashboard</a></td>
+              <td class="nav-td-left"><a class="nav-link" href="{{ url_for('admin.admin_dashboard') }}">Run Hour</a></td>
               <td class="nav-td-right"><span class="nav-name">{{ g.user['usertype'] }}</span></td>
             </tr>
             <tr>
@@ -92,7 +92,7 @@
               <td class="nav-td-right"><span class="nav-name">{{ g.user['username'] }}</span></td>
             </tr>
             <tr>
-              <td class="nav-td-left"><a class="nav-link" href="{{ url_for('admin.admin_dashboard') }}">Dashboard</a></td>
+              <td class="nav-td-left"><a class="nav-link" href="{{ url_for('admin.admin_dashboard') }}">Bids</a></td>
               <td class="nav-td-right"><a class="nav-link" href="{{ url_for('auth.logout') }}">Log Out</a></td>
             </tr>
           </table>

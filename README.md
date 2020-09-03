@@ -54,7 +54,7 @@ Having installed and started the app, there are a few steps before you can run t
 5. Initialize the game
   * When you've set the configuration files and added all of the player accounts, go to your config page and click the 'Initialize Game' button.
 6. Play!
-  * You'll be able to see the pending bids from each player for each unit for each hour via your dashboard page. When you're ready to run an hour, select the round/hour from the dropdown menu and click 'Run Hour.' This will commit the bids, run the hourly calculations, and send the results to the scoreboard page.
+  * You'll be able to see the pending bids from each player for each unit for each hour via the "Run Hour" page. When you're ready to run an hour, select the round/hour from the dropdown menu and click 'Run Hour.' This will commit the bids, run the hourly calculations, and send the results to the scoreboard page.
   
 ### Configuration
 
