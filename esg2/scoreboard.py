@@ -136,7 +136,8 @@ def hourly_chart(r, h):
 def create_hour_chart(schedule_df, hourly_df, r, h):
     """Creates a Bokeh chart of the supply and demand curves given a round and hour"""
 
-    colors = ['#57BCCD', '#3976AF', '#F08636', '#529D3F', '#C63A33', '#8D6AB8', '#85594E', '#D57EBF']
+    colors = ['#57BCCD', '#3976AF', '#F08636', '#529D3F', '#C63A33', '#8D6AB8', '#85594E', 
+              '#D57EBF', '#81E5D9', '#ECA5C8', '#BD9DDA', '#D6C849', '#F2A175']
     # colors = magma(7)
     # colors = viridis(7)
 
@@ -281,7 +282,8 @@ def create_summary_chart(summary_df):
     summary_df = summary_df.sort_values(by=['round', 'hour'], ascending=[True, True])
     header_suffix = 'balance' # I suppose this could change if we wanted summary charts of other things?
     selected_columns = summary_df.filter(regex=(".*_" + header_suffix))
-    colors = ['#57BCCD', '#3976AF', '#F08636', '#529D3F', '#C63A33', '#8D6AB8', '#85594E', '#D57EBF']
+    colors = ['#57BCCD', '#3976AF', '#F08636', '#529D3F', '#C63A33', '#8D6AB8', '#85594E', 
+              '#D57EBF', '#81E5D9', '#ECA5C8', '#BD9DDA', '#D6C849', '#F2A175']
     r_h = summary_df[['round', 'hour']]
 
     extract_id = lambda header: int(re.search('player_(.*)_' + header_suffix, header).group(1))
