@@ -6,7 +6,7 @@
 {% block content %}
 {% if initialized %}
   <div id="hourly-chart-div">
-    <h6 class="caps-header">Hourly charts</h6>
+    <h1 class="caps-header">Hourly charts</h1>
     <form method="GET" id="select-hourly-chart-form">
       <select name="hour-r-h" onchange="this.form.submit()">
         {% for hour in hours %}
@@ -29,7 +29,7 @@
     </script>
   </div>
   <div style="border-top: 1px solid #eee;">
-    <h6 class="caps-header" style="margin-top: 2rem;">Standings</h6>
+    <h1 class="caps-header" style="margin-top: 2rem;">Standings</h1>
     <div id="summary-chart" style="margin-bottom: 2rem"></div>
     <script>
     fetch('/chart/summary')
@@ -38,7 +38,7 @@
     </script>
   </div>
   <div id="summary-table-div" style="border-top: 1px solid #eee;">
-    <h6 class="caps-header" style="margin-top: 2rem;">Game summary</h6>
+    <h1 class="caps-header" style="margin-top: 2rem;">Game summary</h1>
     <p><a href="{{ url_for('scoreboard.engine_file', filename='summary.csv') }}">summary.csv</a></p>
     <style>
       select, form {margin-bottom: 0;}
@@ -87,7 +87,7 @@
   </script>
   {% endif %}
 {% else %}
-<h6 class="caps-header">Scoreboard</h6>
+<h1 class="caps-header">Scoreboard</h1>
 The game has not yet been initialized. An administrator can initialize the game via their config panel.
 {% endif %}  
 {% endblock %}

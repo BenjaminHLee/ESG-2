@@ -6,7 +6,7 @@
 {% block content %}  
 {% if initialized %}
 <div>
-  <h6 class="caps-header">Run Hour</h6>
+  <h1 class="caps-header">Run Hour</h1>
   Runs the selected hour: bids for that hour are recorded, the hour's computations completed, 
   and the hourly sheet updated accordingly. The summary sheet is updated for that hour only; 
   changes do not propagate forwards (you must run the subsequent hours to do so).
@@ -33,7 +33,7 @@
   </script>  
 </div>
 <div style="border-top: 1px solid #eee;">
-  <h6 class="caps-header" style="margin-top: 2rem;">Pending Bids</h6>
+  <h1 class="caps-header" style="margin-top: 2rem;">Pending Bids</h1>
   <div class="row">
     <div class="u-full-width">
         <div class="scrolling-wrapper-flexbox">
@@ -63,7 +63,7 @@
 
 </div>
 {% else %}
-<h6 class="caps-header">Admin Dashboard</h6>
+<h1 class="caps-header">Admin Dashboard</h1>
 The game has not yet been initialized. You can initialize the game via the config panel.
 {% endif %}
 {% endblock %}
