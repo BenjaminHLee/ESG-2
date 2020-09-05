@@ -67,3 +67,20 @@ function toggleMobileNav() {
   var m = document.getElementById("mobile-nav");
   m.style.display = (m.style.display === "block") ? "none" : "block";
 }
+
+// window.onload = function start() {
+//   rotate_header_colors();
+// }
+// function rotate_header_colors() {
+//   var i = 0;
+//   var headers = document.getElementsByClassName('esg-header');
+//   window.setInterval(function () {
+//     var colors = ['#A6D6DF', '#EDB88D', '#D28D87', '#B7A8D1', '#A0C291', '#B29C96', '#8FADCC', 
+//                   '#D57EBF', '#81E5D9', '#ECA5C8', '#BD9DDA', '#D6C849', '#F2A175'];
+//     var h;
+//     for (h = 0; h < headers.length; h++) {
+//       headers[h].style.color = colors[i];
+//     }
+//     i = (i + 1) % colors.length;
+//   }, 1500);
+// }
