@@ -25,6 +25,7 @@ TODO:
 
 ### Installation
 
+Read through the following process in its entirety before starting installation.
 Currently, the only way to install this project is by cloning the repository to 
 your web server of choice. I'm currently working on improving deployment/
 instancing options, but it's a nontrivial change that will take a bit of work.
@@ -44,10 +45,10 @@ Until then:
   * `python3 -m flask run`
   
 \* Note: using `flask run` in non-development environments is generally 
-considered bad practice. You can get away with it if you're running a short-
-lived instance for a small number of users, but it's better to use a proper
-WSGI server. If you're just looking for a series of things to copy and paste,
-try the following steps:
+considered bad practice. You can get away with it if you're running a 
+short-lived instance for a small number of users, but it's better to use a 
+proper WSGI server. If you're just looking for a series of things to copy and 
+paste, try the following steps:
 
 5. Install gunicorn
   * `pip install gunicorn`
@@ -62,6 +63,19 @@ try the following steps:
   * `gunicorn --bind 0.0.0.0:5000 wsgi:app`
   (replace `0.0.0.0:5000` with your preferred host and port)
 
+\* Note: you'll probably want a way to run this in the background so that you
+can access the command prompt while the server is running. If you're on a POSIX
+system, use `screen`:
+
+5. (or 7.): Start the server in a deatched screen session:
+  * `screen -dmS my-process-name python3 -m flask run`
+  * or `screen -dmS my-process-name gunicorn --bind {host:port} wsgi:app`
+
+6. (or 8.): Reattach the screen to read the real-time logs:
+  * `screen -r my-process-name`
+
+7. (or 9.): Detach the screen session to return to the command prompt:
+  * Press `ctrl`+`a` and then `d`
 
 
 ### Administration
