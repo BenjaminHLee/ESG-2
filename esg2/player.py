@@ -27,7 +27,7 @@ def player_dashboard():
     if request.method == 'POST':
         bids_df = get_portfolio_bids(portfolio_id)
 
-        if 'place-bids-no-adjust' in request.form:
+        if get_game_setting('adjustment') == 'disabled':
             # No adjustment bids
             for (key, bid) in request.form.items():
                 unit_id, column_header, bid = form_entry_to_tuple(key, bid)
