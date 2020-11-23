@@ -28,22 +28,25 @@ def player_dashboard():
         bids_df = get_portfolio_bids(portfolio_id)
 
         for (key, bid) in request.form.items():
-            unit_id, column_header, bid = form_entry_to_tuple(key, bid)
-            # Check if bid is a valid decimal; any invalid/empty values will become None
             try:
-                bid = round(decimal.Decimal(bid), 2)
-                bid = min(bid, decimal.Decimal(decimal.Decimal(get_game_setting('max bid'))))
-                bid = max(bid, decimal.Decimal(decimal.Decimal(get_game_setting('min bid'))))
-                # Cast to String because sqlite doesn't like Decimals
-                bid = "{:.2f}".format(bid)
+                unit_id, column_header, bid = form_entry_to_tuple(key, bid)
+                # Check if bid is a valid decimal; any invalid/empty values will become None
+                try:
+                    bid = round(decimal.Decimal(bid), 2)
+                    bid = min(bid, decimal.Decimal(decimal.Decimal(get_game_setting('max bid'))))
+                    bid = max(bid, decimal.Decimal(decimal.Decimal(get_game_setting('min bid'))))
+                    # Cast to String because sqlite doesn't like Decimals
+                    bid = "{:.2f}".format(bid)
+                except:
+                    bid = None
+                if bid is not None:
+                    # Overwrite bid only if form cell is not None 
+                    unit = bids_df.loc[bids_df['unit_id'] == int(unit_id)]
+                    # Overwrite bid only if unit is owned by player
+                    if len(unit.index) == 1 and unit['portfolio_id'].item() == portfolio_id:
+                        bids_df.loc[bids_df['unit_id'] == int(unit_id), column_header] = bid
             except:
-                bid = None
-            if bid is not None:
-                # Overwrite bid only if form cell is not None 
-                unit = bids_df.loc[bids_df['unit_id'] == int(unit_id)]
-                # Overwrite bid only if unit is owned by player
-                if len(unit.index) == 1 and unit['portfolio_id'].item() == portfolio_id:
-                    bids_df.loc[bids_df['unit_id'] == int(unit_id), column_header] = bid
+                print("Bad bid POST: ", key, bid)
 
         # replace instances of nan with None
         bids_df = bids_df.where(bids_df.notnull(), None)
@@ -99,12 +102,7 @@ def get_portfolio_bids(portfolio_id):
 def form_entry_to_tuple(key, value):
     """Takes in a key of the form "id-{id}-header-{header}" and a value; 
     returns a tuple ({id}, {header}, value) """
-    try:
-        s = key.split('-')
-        i = s[1]
-        h = s[3]
-        return (i, h, value)
-    except:
-        # TODO: LOG ERROR
-        return ("bad name string", "bad name string", value)
-
+    s = key.split('-')
+    i = s[1]
+    h = s[3]
+    return (i, h, value)
