@@ -11,15 +11,16 @@ FEATURES:
 - Player dashboard
 - Scoreboard
 - Pretty charts
+- Per-unit adjustment bidding
 
 TODO:
-- Frontend adjustment bidding (required for full ESG-2 support)
-- Fix instancing — move instance-specific .csv files to instance folder
+- Frontend per-portfolio adjustment bidding (contrast player-avaliable granularity)
+- Multi-instance support
 - Documentation
 - Inline documentation
 - Restyle code (consistently)
 - Improve logging
-- Add guide for building/deploying
+- Proper multi-instance deployment guide
 
 ## Admin guide
 
