@@ -27,41 +27,39 @@ def player_dashboard():
     if request.method == 'POST':
         bids_df = get_portfolio_bids(portfolio_id)
 
-        if get_game_setting('adjustment') == 'disabled':
-            # No adjustment bids
-            for (key, bid) in request.form.items():
-                unit_id, column_header, bid = form_entry_to_tuple(key, bid)
-                # Check if bid is a valid decimal; any invalid/empty values will become None
-                try:
-                    bid = round(decimal.Decimal(bid), 2)
-                    bid = min(bid, decimal.Decimal(decimal.Decimal(get_game_setting('max bid'))))
-                    bid = max(bid, decimal.Decimal(decimal.Decimal(get_game_setting('min bid'))))
-                    # Cast to String because sqlite doesn't like Decimals
-                    bid = "{:.2f}".format(bid)
-                except:
-                    bid = None
-                if bid is not None:
-                    # Overwrite bid only if form cell is not None 
-                    unit = bids_df.loc[bids_df['unit_id'] == int(unit_id)]
-                    if unit['portfolio_id'].item() == portfolio_id:
-                        bids_df.loc[bids_df['unit_id'] == int(unit_id), column_header] = bid
+        for (key, bid) in request.form.items():
+            unit_id, column_header, bid = form_entry_to_tuple(key, bid)
+            # Check if bid is a valid decimal; any invalid/empty values will become None
+            try:
+                bid = round(decimal.Decimal(bid), 2)
+                bid = min(bid, decimal.Decimal(decimal.Decimal(get_game_setting('max bid'))))
+                bid = max(bid, decimal.Decimal(decimal.Decimal(get_game_setting('min bid'))))
+                # Cast to String because sqlite doesn't like Decimals
+                bid = "{:.2f}".format(bid)
+            except:
+                bid = None
+            if bid is not None:
+                # Overwrite bid only if form cell is not None 
+                unit = bids_df.loc[bids_df['unit_id'] == int(unit_id)]
+                # Overwrite bid only if unit is owned by player
+                if len(unit.index) == 1 and unit['portfolio_id'].item() == portfolio_id:
+                    bids_df.loc[bids_df['unit_id'] == int(unit_id), column_header] = bid
 
-            # replace instances of nan with None
-            bids_df = bids_df.where(bids_df.notnull(), None)
-
-            # Update database: drop rows from `bids` in bids_df, append bids_df
-            # Note: this leaves the `bids` table out of order — this gets fixed in the to_csv
-            # stage of admin hour-running
-            db = get_db()
-            # Create temporary table for comparison purposes
-            bids_df.to_sql('temporary_bids', db, if_exists='replace', index=False)
-            # Drop any rows in `bids` that match a unit_id in `temporary_bids`
-            db.execute(
-                'DELETE FROM bids WHERE unit_id IN (SELECT unit_id FROM temporary_bids)'
-            )
-            db.commit()
-            # Append bids_df
-            bids_df.to_sql('bids', db, if_exists='append', index=False)
+        # replace instances of nan with None
+        bids_df = bids_df.where(bids_df.notnull(), None)
+        # Update database: drop rows from `bids` in bids_df, append bids_df
+        # Note: this leaves the `bids` table out of order — this gets fixed in the to_csv
+        # stage of admin hour-running
+        db = get_db()
+        # Create temporary table for comparison purposes
+        bids_df.to_sql('temporary_bids', db, if_exists='replace', index=False)
+        # Drop any rows in `bids` that match a unit_id in `temporary_bids`
+        db.execute(
+            'DELETE FROM bids WHERE unit_id IN (SELECT unit_id FROM temporary_bids)'
+        )
+        db.commit()
+        # Append bids_df
+        bids_df.to_sql('bids', db, if_exists='append', index=False)
             
         return redirect(url_for('player.player_dashboard'))
 
