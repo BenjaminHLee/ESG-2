@@ -16,9 +16,7 @@ FEATURES:
 TODO:
 - Frontend per-portfolio adjustment bidding (contrast player-avaliable granularity)
 - Multi-instance support
-- Documentation
-- Inline documentation
-- Restyle code (consistently)
+- Internal code quality improvements
 - Improve logging
 - Proper multi-instance deployment guide
 
