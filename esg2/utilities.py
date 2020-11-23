@@ -4,13 +4,22 @@ import pandas as pd
 from esg2 import CSV_FOLDER, CONFIG_FOLDER, HOURLY_FOLDER
 
 
-def bid_base_r_h_to_header(bid_base_r_h):
-    """Takes in a string of the form "bid_base_{r}_{h}" and converts it to "{r}/{h}" """
+def make_pretty_header(bid_base_r_h):
+    """Takes in a string of the form "bid_{x}_{r}_{h}" and converts it to "{r}/{h}"
+    or "{r}/{h} {x}", depending on the value of x"""
     try:
         s = bid_base_r_h.split('_')
+        x = s[1]
         r = s[2]
         h = s[3]
-        return r + "/" + h
+        if x == "base":
+            return f"{r}/{h}"
+        elif x == "up":
+            return f"{r}/{h} {x}"
+        elif x == "down":
+            return f"{r}/{h} dn"
+        else:
+            return "bad input string!"
     except:
         # TODO: LOG ERROR
         return "bad input string!"

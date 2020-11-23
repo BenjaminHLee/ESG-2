@@ -7,11 +7,10 @@
 {% block content %}
 {% if player_is_valid %}
   {% if initialized %}
-  {% if adjustment == "disabled" %}
   <div class="row">
     <div class="u-full-width">
       <div class="scrolling-wrapper-flexbox">
-        <form method="POST" id="no-adjust-form"></form>
+        <form method="POST" id="bid-form"></form>
         <table>
           <tr>
             <th class="sticky-col first-col-120">Unit Name</th>
@@ -29,7 +28,7 @@
               {% for bid_value in row[3:] %}
                 <td>
                   <input 
-                  form="no-adjust-form"
+                  form="bid-form"
                   type="text" 
                   style="width: 60px; margin-bottom: 0;" 
                   name="{{ 'id-' ~ row['unit_id'] ~ '-header-' ~ bids.columns[2:][loop.index - 1] }}" 
@@ -42,8 +41,7 @@
       </div>
     </div>
   </div>            
-  <input form="no-adjust-form" class="button-primary" type="submit" name="place-bids-no-adjust" value="Place bids">
-  {% endif %}
+  <input form="bid-form" class="button-primary" type="submit" name="place-bids" value="Place bids">
   <div style="border-top: 1px solid #eee;">
     <h1 class="caps-header" style="margin-top: 2rem;">Config Files</h1>
     <p><a href="{{ url_for('admin.uploaded_config_file', filename='portfolios.csv') }}">portfolios.csv</a>

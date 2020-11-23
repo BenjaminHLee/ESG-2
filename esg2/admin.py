@@ -10,7 +10,9 @@ from flask import (
 from esg2 import CSV_FOLDER, CONFIG_FOLDER
 from esg2.db import get_db
 from esg2.auth import admin_login_required
-from esg2.utilities import bid_base_r_h_to_header, get_game_setting, get_portfolio_names_list, first_incomplete_summary_row
+from esg2.utilities import (
+    make_pretty_header, get_game_setting, get_portfolio_names_list, 
+    first_incomplete_summary_row, round_hour_names)
 from . import engine
 
 bp = Blueprint('admin', __name__, url_prefix='')
@@ -193,9 +195,9 @@ def start_game():
 @bp.route('/admin/dashboard', methods=['GET', 'POST'])
 @admin_login_required
 def admin_dashboard():
+    schedule_df = pd.read_csv(os.path.join(CONFIG_FOLDER, 'schedule.csv'))
 
     if request.method == 'POST':
-        schedule_df = pd.read_csv(os.path.join(CONFIG_FOLDER, 'schedule.csv'))
         portfolios_df = pd.read_csv(os.path.join(CONFIG_FOLDER, 'portfolios.csv'))
         players_df = pd.read_csv(os.path.join(CSV_FOLDER, 'players.csv'))
         summary_df = pd.read_csv(os.path.join(CSV_FOLDER, 'summary.csv'))
@@ -237,17 +239,22 @@ def admin_dashboard():
     unit_names_df = bids_df[['portfolio_name', 'unit_name', 'unit_id']]
     # ASSUMING NO ADJUSTMENT BIDS — TODO: ADD SUPPORT FOR BY PORTFOLIO/BY PLANT ADJUST
     adjustment = get_game_setting('adjustment')
-    base_bids_df = bids_df.filter(regex=("bid_base_.*"))
-    name_base_bids_df = pd.concat([unit_names_df, base_bids_df], axis=1, sort=False)
-    pretty_headers = [bid_base_r_h_to_header(s) for s in base_bids_df.columns]
+    if adjustment == 'disabled':
+        base_bids_df = bids_df.filter(regex=("bid_base_.*"))
+        name_bids_df = pd.concat([unit_names_df, base_bids_df], axis=1, sort=False)
+        pretty_headers = [make_pretty_header(s) for s in base_bids_df.columns]
+    elif adjustment == 'per unit':
+        all_bids_df = bids_df.filter(regex=("bid_.*"))
+        name_bids_df = pd.concat([unit_names_df, all_bids_df], axis=1, sort=False)
+        pretty_headers = [make_pretty_header(s) for s in all_bids_df.columns]
 
     next_r_h = first_incomplete_summary_row(summary_df)
 
     kwargs = {
         'initialized':True,
-        'bids':name_base_bids_df,
+        'bids':name_bids_df,
+        'hours':round_hour_names(schedule_df),
         'next_r_h':next_r_h,
-        'adjustment':adjustment,
         'pretty_headers':pretty_headers
     }
     return render_template('admin/dashboard.html', **kwargs)
