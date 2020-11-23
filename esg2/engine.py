@@ -119,9 +119,16 @@ def determine_active_units(r, h, bids_df, schedule_df, hourly_df, portfolios_df,
     north_production = hourly_df.loc[(hourly_df['unit_location'] == "North")]['mwh_produced_initially'].sum()
     south_production = hourly_df.loc[(hourly_df['unit_location'] == "South")]['mwh_produced_initially'].sum()
 
+    # Compute fraction of base demand actually purchased by market
+    net_init_prod = north_production + south_production
+    demand_base = schedule_df.loc[(schedule_df['round'] == r) & (schedule_df['hour'] == h)]['net'].values.item()
+    scaling_factor = net_init_prod / demand_base
+
     # Compare to zone specific demand
     north_demand = schedule_df.loc[(schedule_df['round'] == r) & (schedule_df['hour'] == h)]['north'].values.item()
     south_demand = schedule_df.loc[(schedule_df['round'] == r) & (schedule_df['hour'] == h)]['south'].values.item()
+    north_demand = north_demand * scaling_factor
+    south_demand = south_demand * scaling_factor
 
     # Get interzone transmission capacities
     n_to_s_capacity = schedule_df.loc[(schedule_df['round'] == r) & (schedule_df['hour'] == h)]['n_to_s_capacity'].values.item()
