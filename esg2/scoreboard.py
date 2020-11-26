@@ -127,13 +127,16 @@ def hourly_chart(r, h):
     try:
         hourly_df = pd.read_csv(os.path.join(HOURLY_FOLDER, "round_" + str(r) + "_hour_" + str(h) + ".csv"))
         schedule_df = pd.read_csv(os.path.join(CONFIG_FOLDER, 'schedule.csv'))
-        p = create_hour_chart(schedule_df, hourly_df, int(r), int(h))
+        if get_game_setting('adjustment') == 'per unit' or get_game_setting('adjustment') == 'per portfolio': 
+            p = create_hour_chart(schedule_df, hourly_df, int(r), int(h), True)
+        else: 
+            p = create_hour_chart(schedule_df, hourly_df, int(r), int(h), False)
         return json.dumps(json_item(p, "hourly-chart"))
         # return json.dumps(json_item(p, "summary-chart", theme='dark_minimal'))
     except(FileNotFoundError):
         return "Bad request. Has the game been initialized?"
 
-def create_hour_chart(schedule_df, hourly_df, r, h):
+def create_hour_chart(schedule_df, hourly_df, r, h, adjustment=False):
     """Creates a Bokeh chart of the supply and demand curves given a round and hour"""
 
     colors = ['#57BCCD', '#3976AF', '#F08636', '#529D3F', '#C63A33', '#8D6AB8', '#85594E', 
@@ -160,7 +163,7 @@ def create_hour_chart(schedule_df, hourly_df, r, h):
         supply_curve_data['color'].append(colors[int(row['portfolio_id']) - 1 % len(colors)])
         mwh_running_total += float(row['unit_capacity'])
 
-    cds = ColumnDataSource(supply_curve_data)
+    base_cds = ColumnDataSource(supply_curve_data)
 
     chart_title = "Day " + str(r) + " hour " + str(h) + " supply and demand"
 
@@ -174,7 +177,7 @@ def create_hour_chart(schedule_df, hourly_df, r, h):
                    sizing_mode='stretch_width', height=300, title_location='above')
 
     supply_curve = chart.multi_line(xs='xs', ys='ys', line_width=4, line_color='color', line_alpha=0.6,
-                                    hover_line_color='color', hover_line_alpha=1.0, source=cds)
+                                    hover_line_color='color', hover_line_alpha=1.0, source=base_cds)
 
     chart.add_tools(HoverTool(renderers=[supply_curve], show_arrow=False, line_policy='interp',
                               point_policy='follow_mouse', attachment='above', tooltips=[
@@ -182,6 +185,85 @@ def create_hour_chart(schedule_df, hourly_df, r, h):
                                   ('Unit', '@unit_name'),
                                   ('$/MWh', '@bid')
                               ]))
+
+    if adjustment:
+        up_adjust_curve_data = defaultdict(list)
+        mwh_running_total = 0
+        for _, row in hourly_df.iterrows():
+            x_left = mwh_running_total
+            x_right = x_left + float(row['unit_capacity'])
+            adj_right = x_left + float(row['mwh_adjusted_up'])
+            y = float(row['bid_up'])
+            if float(row['mwh_adjusted_up']) > 0:
+                up_adjust_curve_data['xs'].append([x_left, adj_right])
+                up_adjust_curve_data['ys'].append([y, y])
+                up_adjust_curve_data['portfolio_name'].append(row['portfolio_name'])
+                up_adjust_curve_data['unit_name'].append(row['unit_name'])
+                up_adjust_curve_data['adj_bid'].append("{:0.2f}".format(y))
+                up_adjust_curve_data['color'].append(colors[int(row['portfolio_id']) - 1 % len(colors)])
+                up_adjust_curve_data['alpha'].append(0.8)
+                up_adjust_curve_data['hover_alpha'].append(0.8)
+            if float(row['mwh_produced_initially']) < float(row['unit_capacity']):
+                up_adjust_curve_data['xs'].append([adj_right, x_right])
+                up_adjust_curve_data['ys'].append([y, y])
+                up_adjust_curve_data['portfolio_name'].append(row['portfolio_name'])
+                up_adjust_curve_data['unit_name'].append(row['unit_name'])
+                up_adjust_curve_data['adj_bid'].append("{:0.2f}".format(y))
+                up_adjust_curve_data['color'].append(colors[int(row['portfolio_id']) - 1 % len(colors)])
+                up_adjust_curve_data['alpha'].append(0.2)
+                up_adjust_curve_data['hover_alpha'].append(0.4)
+            mwh_running_total += float(row['unit_capacity'])
+        up_adj_cds = ColumnDataSource(up_adjust_curve_data)
+
+        down_adjust_curve_data = defaultdict(list)
+        mwh_running_total = 0
+        for _, row in hourly_df.iterrows():
+            x_left = mwh_running_total
+            x_right = x_left + float(row['unit_capacity'])
+            adj_left = x_right - float(row['mwh_adjusted_down'])
+            y = float(row['bid_down'])
+            if float(row['mwh_adjusted_down']) > 0:
+                down_adjust_curve_data['xs'].append([adj_left, x_right])
+                down_adjust_curve_data['ys'].append([y, y])
+                down_adjust_curve_data['portfolio_name'].append(row['portfolio_name'])
+                down_adjust_curve_data['unit_name'].append(row['unit_name'])
+                down_adjust_curve_data['adj_bid'].append("{:0.2f}".format(y))
+                down_adjust_curve_data['color'].append(colors[int(row['portfolio_id']) - 1 % len(colors)])
+                down_adjust_curve_data['alpha'].append(0.8)
+                down_adjust_curve_data['hover_alpha'].append(0.8)
+            if float(row['mwh_produced_initially']) > 0:
+                down_adjust_curve_data['xs'].append([x_left, adj_left])
+                down_adjust_curve_data['ys'].append([y, y])
+                down_adjust_curve_data['portfolio_name'].append(row['portfolio_name'])
+                down_adjust_curve_data['unit_name'].append(row['unit_name'])
+                down_adjust_curve_data['adj_bid'].append("{:0.2f}".format(y))
+                down_adjust_curve_data['color'].append(colors[int(row['portfolio_id']) - 1 % len(colors)])
+                down_adjust_curve_data['alpha'].append(0.2)
+                down_adjust_curve_data['hover_alpha'].append(0.4)
+            mwh_running_total += float(row['unit_capacity'])
+        down_adj_cds = ColumnDataSource(down_adjust_curve_data)
+
+        up_adj_curve = chart.multi_line(xs='xs', ys='ys', line_width=2.5, line_color='color', line_alpha='alpha', 
+                                        line_dash='solid', hover_line_color='color', hover_line_alpha='hover_alpha', 
+                                        source=up_adj_cds)
+
+        chart.add_tools(HoverTool(renderers=[up_adj_curve], show_arrow=False, line_policy='interp',
+                                point_policy='follow_mouse', attachment='above', tooltips=[
+                                    ('Portfolio', '@portfolio_name'),
+                                    ('Unit', '@unit_name'),
+                                    ('Up Adj. $/MWh', '@adj_bid')
+                                ]))
+
+        down_adj_curve = chart.multi_line(xs='xs', ys='ys', line_width=2.5, line_color='color', line_alpha='alpha', 
+                                        line_dash='solid', hover_line_color='color', hover_line_alpha='hover_alpha', 
+                                        source=down_adj_cds)
+
+        chart.add_tools(HoverTool(renderers=[down_adj_curve], show_arrow=False, line_policy='interp',
+                                point_policy='follow_mouse', attachment='above', tooltips=[
+                                    ('Portfolio', '@portfolio_name'),
+                                    ('Unit', '@unit_name'),
+                                    ('Down Adj. $/MWh', '@adj_bid')
+                                ]))
 
     current_row = schedule_df[schedule_df['round'] == r][schedule_df['hour'] == h]
     net = current_row.iloc[0]['net']
