@@ -192,10 +192,10 @@ def create_hour_chart(schedule_df, hourly_df, r, h, adjustment=False):
         for _, row in hourly_df.iterrows():
             x_left = mwh_running_total
             x_right = x_left + float(row['unit_capacity'])
-            adj_right = x_left + float(row['mwh_adjusted_up'])
+            adj_left = x_right - float(row['mwh_adjusted_up'])
             y = float(row['bid_up'])
             if float(row['mwh_adjusted_up']) > 0:
-                up_adjust_curve_data['xs'].append([x_left, adj_right])
+                up_adjust_curve_data['xs'].append([adj_left, x_right])
                 up_adjust_curve_data['ys'].append([y, y])
                 up_adjust_curve_data['portfolio_name'].append(row['portfolio_name'])
                 up_adjust_curve_data['unit_name'].append(row['unit_name'])
@@ -204,7 +204,7 @@ def create_hour_chart(schedule_df, hourly_df, r, h, adjustment=False):
                 up_adjust_curve_data['alpha'].append(0.8)
                 up_adjust_curve_data['hover_alpha'].append(0.8)
             if float(row['mwh_produced_initially']) < float(row['unit_capacity']):
-                up_adjust_curve_data['xs'].append([adj_right, x_right])
+                up_adjust_curve_data['xs'].append([x_left, adj_left])
                 up_adjust_curve_data['ys'].append([y, y])
                 up_adjust_curve_data['portfolio_name'].append(row['portfolio_name'])
                 up_adjust_curve_data['unit_name'].append(row['unit_name'])
