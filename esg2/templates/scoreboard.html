@@ -23,21 +23,28 @@
     {{ resources | safe }}
     <div id="hourly-chart" style="margin-bottom: 2rem"></div>
     <script>
-    fetch("/chart/hourly/r{{ chart_r_h.split('/')[0] }}h{{ chart_r_h.split('/')[1] }}")
+    var t;
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      t = 'dark';
+    }
+    fetch("/chart/hourly/r{{ chart_r_h.split('/')[0] }}h{{ chart_r_h.split('/')[1] }}?theme=" + t)
       .then(function(response) { return response.json(); })
       .then(function(item) { return Bokeh.embed.embed_item(item); })
     </script>
   </div>
-  <div style="border-top: 1px solid #eee;">
+  <div class="top-bordered">
     <h1 class="caps-header" style="margin-top: 2rem;">Standings</h1>
     <div id="summary-chart" style="margin-bottom: 2rem"></div>
     <script>
-    fetch('/chart/summary')
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      t = 'dark';
+    }
+    fetch('/chart/summary?theme=' + t)
       .then(function(response) { return response.json(); })
       .then(function(item) { return Bokeh.embed.embed_item(item); })
     </script>
   </div>
-  <div id="summary-table-div" style="border-top: 1px solid #eee;">
+  <div id="summary-table-div" class="top-bordered">
     <h1 class="caps-header" style="margin-top: 2rem;">Game summary</h1>
     <p><a href="{{ url_for('scoreboard.engine_file', filename='summary.csv') }}">summary.csv</a></p>
     <style>
