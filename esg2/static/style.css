@@ -19,7 +19,10 @@
   --navbar-link-color: #222;
   --navbar-name-color: #aaa;
   --navbar-active-color: #33C3F0;
-  --esg-header-color: #ddd; }
+  --esg-header-color: #ddd; 
+  --theme-switch-bg-color: #b4d7ff; 
+  --theme-switch-color: #fff1a2; 
+  --theme-switch-offset: 0px; }
 
 [data-theme="dark"] { /* Dark mode colors */
   --main-background-color: #000;
@@ -43,7 +46,10 @@
   --navbar-link-color: #b8b8b8;
   --navbar-name-color: #656565;
   --navbar-active-color: #c0900d;
-  --esg-header-color: #444; }
+  --esg-header-color: #444; 
+  --theme-switch-bg-color: #150572; 
+  --theme-switch-color: #cbcbcb;
+  --theme-switch-offset: 26px; }
 
 /* Overriding Skeleton colors with property-based colors */
 
@@ -334,7 +340,7 @@ hr {
   display:none; }
 
 .theme-switch-wrapper  .slider {
-  background-color: #b4d7ff;
+  background-color: var(--theme-switch-bg-color);
   bottom: 0;
   cursor: pointer;
   left: 0;
@@ -354,14 +360,14 @@ hr {
   width: 26px; }
 
 .theme-switch-wrapper .slider::before {
-  background-color: #fff1a2; }
+  background-color: var(--theme-switch-color); }
 
 .theme-switch-wrapper input:checked + .slider {
-  background-color: #150572; }
+  background-color: var(--theme-switch-bg-color); }
 
 .theme-switch-wrapper input:checked + .slider::before {
-  background-color: #cbcbcb;
-  transform: translateX(26px); }
+  background-color: var(--theme-switch-color);
+  transform: translateX(var(--theme-switch-offset)); }
 
 .theme-switch-wrapper .slider.round {
   border-radius: 34px;
