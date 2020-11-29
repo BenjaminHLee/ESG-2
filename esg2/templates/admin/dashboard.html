@@ -36,31 +36,34 @@
   <h1 class="caps-header" style="margin-top: 2rem;">Pending Bids</h1>
   <div class="row">
     <div class="u-full-width">
-        <div class="scrolling-wrapper-flexbox">
-            <table>
-                <tr>
-                    <th class="sticky-col first-col-60">Portfolio</th>
-                    <th class="sticky-col first-col-120" style="left: 75px;">Unit Name</th>
-                    {% for header in pretty_headers %}
-                        <th>{{ header }}</th>
-                    {% endfor %}
-                </tr>
-                {% for row in bids.itertuples() %}
-                    <tr>
-                        <td class="sticky-col first-col-60" style="white-space: nowrap;">{{ row['portfolio_name'] }}</td>
-                        <td class="sticky-col first-col-120" style="left: 75px;">{{ row['unit_name'] }}</td>
-                        {% for bid_value in row[4:] %}
-                            <td>
-                                {% if bid_value == None %}{% else %}{{ '{:.2f}'.format(bid_value) }}{% endif %}
-                            </td>
-                        {% endfor %}
-                    </tr>
+      <div class="scrolling-wrapper-flexbox">
+        <table>
+          <thead>
+            <tr>
+              <th class="sticky-col first-col-60">Portfolio</th>
+              <th class="sticky-col first-col-120" style="left: 75px;">Unit Name</th>
+              {% for header in pretty_headers %}
+                <th>{{ header }}</th>
+              {% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in bids.itertuples() %}
+              <tr>
+                <td class="sticky-col first-col-60" style="white-space: nowrap;">{{ row['portfolio_name'] }}</td>
+                <td class="sticky-col first-col-120" style="left: 75px;">{{ row['unit_name'] }}</td>
+                {% for bid_value in row[4:] %}
+                  <td>
+                    {% if bid_value == None %}{% else %}{{ '{:.2f}'.format(bid_value) }}{% endif %}
+                  </td>
                 {% endfor %}
-            </table>
-        </div>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
     </div>
-</div>            
-
+  </div>            
 </div>
 {% else %}
 <h1 class="caps-header">Admin Dashboard</h1>

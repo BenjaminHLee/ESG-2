@@ -51,25 +51,29 @@
       <div class="u-full-width">
         <div class="scrolling-wrapper-flexbox">
           <table>
-            <tr>
-              <!-- Styling for the header elements is generated in scoreboard.py's id_to_header(id) function. -->
-              <th class="sticky-col first-col-60">{{ summary_table_headers[0] | safe }}</th>
-              {% for header in summary_table_headers[1:] %}
-                <th>{{ header | safe }}</th>
-              {% endfor %}
-            </tr>
-            {% for row in summary_table %}
+            <thead>
               <tr>
-                <td class="sticky-col first-col-60">{{ row[0] | safe }}</td>
-                {% for item in row[1:] %}
-                  {% if isnan(item) %}
-                    <td></td>
-                  {% else %}
-                    <td>{{ '{:.2f}'.format(item) }}</td>
-                  {% endif %}
+                <!-- Styling for the header elements is generated in scoreboard.py's id_to_header(id) function. -->
+                <th class="sticky-col first-col-60">{{ summary_table_headers[0] | safe }}</th>
+                {% for header in summary_table_headers[1:] %}
+                  <th>{{ header | safe }}</th>
                 {% endfor %}
               </tr>
-            {% endfor %}
+            </thead>
+            <tbody>
+              {% for row in summary_table %}
+                <tr>
+                  <td class="sticky-col first-col-60">{{ row[0] | safe }}</td>
+                  {% for item in row[1:] %}
+                    {% if isnan(item) %}
+                      <td></td>
+                    {% else %}
+                      <td>{{ '{:.2f}'.format(item) }}</td>
+                    {% endif %}
+                  {% endfor %}
+                </tr>
+              {% endfor %}
+            </tbody>
           </table>
         </div>
       </div>  
