@@ -5,19 +5,9 @@
 
 {% block content %}
 {% if initialized %}
-  <script>
-    var t = 'light';
-    if (currentTheme === null || currentTheme === 'dark') {
-        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-            t = 'dark';
-        }
-    }
-    fetch("/chart/hourly/r{{ chart_r_h.split('/')[0] }}h{{ chart_r_h.split('/')[1] }}?theme=" + t)
-        .then(function(response) { return response.json(); })
-        .then(function(item) { return Bokeh.embed.embed_item(item); })
-    fetch('/chart/summary?theme=' + t)
-        .then(function(response) { return response.json(); })
-        .then(function(item) { return Bokeh.embed.embed_item(item); })
+  <script src="{{ url_for('static', filename='scoreboard-fetch-charts.js') }}"></script>
+  <script id="chart-fetching-script">
+    fetchCharts("{{ chart_r_h.split('/')[0] }}", "{{ chart_r_h.split('/')[1] }}")
   </script>
   <div id="hourly-chart-div">
     <h1 class="caps-header">Hourly charts</h1>
