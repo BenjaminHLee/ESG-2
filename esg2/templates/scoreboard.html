@@ -5,6 +5,20 @@
 
 {% block content %}
 {% if initialized %}
+  <script>
+    var t = 'light';
+    if (currentTheme === null || currentTheme === 'dark') {
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            t = 'dark';
+        }
+    }
+    fetch("/chart/hourly/r{{ chart_r_h.split('/')[0] }}h{{ chart_r_h.split('/')[1] }}?theme=" + t)
+        .then(function(response) { return response.json(); })
+        .then(function(item) { return Bokeh.embed.embed_item(item); })
+    fetch('/chart/summary?theme=' + t)
+        .then(function(response) { return response.json(); })
+        .then(function(item) { return Bokeh.embed.embed_item(item); })
+  </script>
   <div id="hourly-chart-div">
     <h1 class="caps-header">Hourly charts</h1>
     <form method="GET" id="select-hourly-chart-form">
@@ -22,27 +36,10 @@
     </form>
     {{ resources | safe }}
     <div id="hourly-chart" style="margin-bottom: 2rem"></div>
-    <script>
-    var t;
-    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      t = 'dark';
-    }
-    fetch("/chart/hourly/r{{ chart_r_h.split('/')[0] }}h{{ chart_r_h.split('/')[1] }}?theme=" + t)
-      .then(function(response) { return response.json(); })
-      .then(function(item) { return Bokeh.embed.embed_item(item); })
-    </script>
   </div>
   <div class="top-bordered">
     <h1 class="caps-header" style="margin-top: 2rem;">Standings</h1>
     <div id="summary-chart" style="margin-bottom: 2rem"></div>
-    <script>
-    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      t = 'dark';
-    }
-    fetch('/chart/summary?theme=' + t)
-      .then(function(response) { return response.json(); })
-      .then(function(item) { return Bokeh.embed.embed_item(item); })
-    </script>
   </div>
   <div id="summary-table-div" class="top-bordered">
     <h1 class="caps-header" style="margin-top: 2rem;">Game summary</h1>

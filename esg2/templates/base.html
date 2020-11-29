@@ -9,21 +9,24 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
 <script src="{{ url_for('static', filename='navbar.js') }}"></script>
-<script>
-  if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-    document.documentElement.setAttribute('data-theme', 'dark');
-  }
-</script>
+<script src="{{ url_for('static', filename='theme-switch.js') }}"></script>
 <meta http-equiv="X-Clacks-Overhead" content="GNU Terry Pratchett" />
-
 
 <div class="container">
 
-  <div id="esg-header-div">
-    <a href="{{ url_for('index') }}">
-    <span class="esg-header short-esg">ESG</span></a>
-    <a href="{{ url_for('index') }}">
-    <span class="esg-header long-esg">the Electricity Strategy Game</span></a>
+  <div style="display: flex; align-items: center;">
+    <div id="esg-header-div">
+      <a href="{{ url_for('index') }}">
+      <span class="esg-header short-esg">ESG</span></a>
+      <a href="{{ url_for('index') }}">
+      <span class="esg-header long-esg">the Electricity Strategy Game</span></a>
+    </div>
+    <div class="theme-switch-wrapper">
+      <label class="theme-switch" for="checkbox">
+        <input type="checkbox" id="checkbox" />
+        <div class="slider round"></div>
+      </label>
+    </div>
   </div>
 
   <div class="navbar-spacer"></div>

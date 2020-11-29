@@ -156,18 +156,18 @@ def hourly_chart(r, h):
     try:
         hourly_df = pd.read_csv(os.path.join(HOURLY_FOLDER, "round_" + str(r) + "_hour_" + str(h) + ".csv"))
         schedule_df = pd.read_csv(os.path.join(CONFIG_FOLDER, 'schedule.csv'))
-        if request.args.get('theme') == 'light': 
-            alpha_boost = 0.0
-        else: 
+        if request.args.get('theme') == 'dark': 
             alpha_boost = 0.2
+        else: 
+            alpha_boost = 0.0
         if get_game_setting('adjustment') == 'per unit' or get_game_setting('adjustment') == 'per portfolio': 
             p = create_hour_chart(schedule_df, hourly_df, int(r), int(h), True, alpha_boost=alpha_boost)
         else: 
             p = create_hour_chart(schedule_df, hourly_df, int(r), int(h), False, alpha_boost=alpha_boost)
-        if request.args.get('theme') == 'light':
-            return json.dumps(json_item(p, "hourly-chart"))
-        else:
+        if request.args.get('theme') == 'dark':
             return json.dumps(json_item(p, "hourly-chart", theme=Theme(json=DARK_THEME_JSON)))
+        else:
+            return json.dumps(json_item(p, "hourly-chart"))
     except(FileNotFoundError):
         return "Bad request. Has the game been initialized?"
 
