@@ -78,7 +78,6 @@ def player_dashboard():
         # replace instances of nan with None
         bids_df = bids_df.where(bids_df.notnull(), None)
         unit_names_df = bids_df[['unit_name', 'unit_id']]
-        # ASSUMING NO ADJUSTMENT BIDS — TODO: ADD SUPPORT FOR BY PORTFOLIO/BY PLANT ADJUST
         adjustment = get_game_setting('adjustment')
         if adjustment == 'disabled':
             base_bids_df = bids_df.filter(regex=("bid_base_.*"))
