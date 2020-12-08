@@ -46,7 +46,9 @@ Until then:
 \* Note: using `flask run` in non-development environments is generally 
 considered bad practice. You can get away with it if you're running a 
 short-lived instance for a small number of users, but it's better to use a 
-proper WSGI server. If you're just looking for a series of things to copy and 
+proper WSGI server. Note: it seems that using Waitress may lead to pages
+stalling; further investigation pending. Recommendation: use gunicorn.
+If you're just looking for a series of things to copy and 
 paste, try the following steps:
 
 5. Install gunicorn
