@@ -3,6 +3,13 @@ import pandas as pd
 
 from esg2 import CSV_FOLDER, CONFIG_FOLDER, HOURLY_FOLDER
 
+def form_entry_to_tuple(key, value):
+    """Takes in a key of the form "id-{id}-header-{header}" and a value; 
+    returns a tuple ({id}, {header}, value) """
+    s = key.split('-')
+    i = s[1]
+    h = s[3]
+    return (i, h, value)
 
 def make_pretty_header(bid_base_r_h):
     """Takes in a string of the form "bid_{x}_{r}_{h}" and converts it to "{r}/{h}"

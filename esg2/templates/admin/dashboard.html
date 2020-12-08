@@ -6,10 +6,14 @@
 {% block content %}  
 {% if initialized %}
 <div>
-  <h1 class="caps-header">Run Hour</h1>
-  Runs the selected hour: bids for that hour are recorded, the hour's computations completed, 
-  and the hourly sheet updated accordingly. The summary sheet is updated for that hour only; 
-  changes do not propagate forwards (you must run the subsequent hours to do so).
+  <div class="row">
+    <div class="eight columns">
+      <h1 class="caps-header">Run Hour</h1>
+      Runs the selected hour: bids for that hour are recorded, the hour's computations completed, 
+      and the hourly sheet updated accordingly. The summary sheet is updated for that hour only; 
+      changes do not propagate forwards (you must run the subsequent hours to do so).
+    </div>
+  </div>
   <form method="POST" id="run-hour-form" style="margin-top: 2rem;">
     <label for="hour-select">Select Hour</label>
     <select name="hour-select" id="hour-select">
@@ -22,7 +26,6 @@
       {% endfor %}
     </select>
     <input class="button-primary" type="submit" name="run-hour" value="Run Hour" onclick="return confirmselect();">
-    
   </form>
   <script type="text/javascript">
     function confirmselect(){
@@ -34,6 +37,7 @@
 </div>
 <div class="top-bordered">
   <h1 class="caps-header" style="margin-top: 2rem;">Pending Bids</h1>
+  <a href="{{ url_for('admin.edit_bids') }}">Edit bids</a>
   <div class="row">
     <div class="u-full-width">
       <div class="scrolling-wrapper-flexbox">

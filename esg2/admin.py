@@ -12,7 +12,7 @@ from esg2.db import get_db
 from esg2.auth import admin_login_required
 from esg2.utilities import (
     make_pretty_header, get_game_setting, get_portfolio_names_list, 
-    first_incomplete_summary_row, round_hour_names)
+    first_incomplete_summary_row, round_hour_names, form_entry_to_tuple)
 from . import engine
 
 bp = Blueprint('admin', __name__, url_prefix='')
@@ -237,7 +237,6 @@ def admin_dashboard():
     bids_df = get_pending_bids().sort_values(['unit_id'], ascending=True)
     bids_df = bids_df.where(bids_df.notnull(), None)
     unit_names_df = bids_df[['portfolio_name', 'unit_name', 'unit_id']]
-    # ASSUMING NO ADJUSTMENT BIDS — TODO: ADD SUPPORT FOR BY PORTFOLIO/BY PLANT ADJUST
     adjustment = get_game_setting('adjustment')
     if adjustment == 'disabled':
         base_bids_df = bids_df.filter(regex=("bid_base_.*"))
@@ -258,6 +257,79 @@ def admin_dashboard():
         'pretty_headers':pretty_headers
     }
     return render_template('admin/dashboard.html', **kwargs)
+
+@bp.route('/admin/edit-bids', methods=['GET', 'POST'])
+@admin_login_required
+def edit_bids():
+    if request.method == 'POST':
+        bids_df = get_pending_bids().sort_values(['unit_id'], ascending=True)
+        bids_df = bids_df.where(bids_df.notnull(), None)
+
+        for (key, bid) in request.form.items():
+            try:
+                unit_id, column_header, bid = form_entry_to_tuple(key, bid)
+                # Check if bid is a valid decimal; any invalid/empty values will become None
+                try:
+                    bid = round(decimal.Decimal(bid), 2)
+                    bid = min(bid, decimal.Decimal(decimal.Decimal(get_game_setting('max bid'))))
+                    bid = max(bid, decimal.Decimal(decimal.Decimal(get_game_setting('min bid'))))
+                    # Cast to String because sqlite doesn't like Decimals
+                    bid = "{:.2f}".format(bid)
+                except:
+                    bid = None
+                if bid is not None:
+                    # Overwrite bid only if form cell is not None 
+                    bids_df.loc[bids_df['unit_id'] == int(unit_id), column_header] = bid
+            except:
+                print("Bad bid POST: ", key, bid)
+
+        # replace instances of nan with None
+        bids_df = bids_df.where(bids_df.notnull(), None)
+        # Update database: drop rows from `bids` in bids_df, append bids_df
+        # Note: this leaves the `bids` table out of order — this gets fixed in the to_csv
+        # stage of admin hour-running
+        db = get_db()
+        # Create temporary table for comparison purposes
+        bids_df.to_sql('temporary_bids', db, if_exists='replace', index=False)
+        # Drop any rows in `bids` that match a unit_id in `temporary_bids`
+        db.execute(
+            'DELETE FROM bids WHERE unit_id IN (SELECT unit_id FROM temporary_bids)'
+        )
+        db.commit()
+        # Append bids_df
+        bids_df.to_sql('bids', db, if_exists='append', index=False)
+            
+        return redirect(url_for('admin.edit_bids'))
+
+    # GET
+    # Check that `bids` table exists
+    db = get_db()
+    if db.execute(
+        '''SELECT name FROM sqlite_master WHERE type='table' AND name='bids' '''
+    ).fetchone() is None:
+        return render_template('/admin/edit_bids.html', initialized=False)
+    else: 
+        bids_df = get_pending_bids().sort_values(['unit_id'], ascending=True)
+        # replace instances of nan with None
+        bids_df = bids_df.where(bids_df.notnull(), None)
+        unit_names_df = bids_df[['unit_name', 'unit_id']]
+        adjustment = get_game_setting('adjustment')
+        if adjustment == 'disabled':
+            base_bids_df = bids_df.filter(regex=("bid_base_.*"))
+            name_bids_df = pd.concat([unit_names_df, base_bids_df], axis=1, sort=False)
+            pretty_headers = [make_pretty_header(s) for s in base_bids_df.columns]
+        elif adjustment == 'per unit':
+            all_bids_df = bids_df.filter(regex=("bid_.*"))
+            name_bids_df = pd.concat([unit_names_df, all_bids_df], axis=1, sort=False)
+            pretty_headers = [make_pretty_header(s) for s in all_bids_df.columns]
+
+    kwargs = {
+        'initialized':True,
+        'bids':name_bids_df,
+        'pretty_headers':pretty_headers
+    }
+    return render_template('/admin/edit_bids.html', **kwargs)
+    
 
 def get_pending_bids():
     """Returns a Pandas DataFrame that represents the bids table (not the committed bids.csv)"""

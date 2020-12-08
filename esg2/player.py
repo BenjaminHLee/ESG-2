@@ -9,7 +9,7 @@ from flask import (
 from esg2 import CSV_FOLDER, CONFIG_FOLDER
 from esg2.db import get_db
 from esg2.auth import login_required
-from esg2.utilities import make_pretty_header, get_game_setting
+from esg2.utilities import make_pretty_header, get_game_setting, form_entry_to_tuple
 
 bp = Blueprint('player', __name__, url_prefix='')
 
@@ -103,10 +103,3 @@ def get_portfolio_bids(portfolio_id):
     bids_df = pd.read_sql_query('SELECT * FROM bids WHERE portfolio_id=' + str(portfolio_id), db)
     return bids_df
 
-def form_entry_to_tuple(key, value):
-    """Takes in a key of the form "id-{id}-header-{header}" and a value; 
-    returns a tuple ({id}, {header}, value) """
-    s = key.split('-')
-    i = s[1]
-    h = s[3]
-    return (i, h, value)

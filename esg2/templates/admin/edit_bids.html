@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1 class="caps-header">{% block title %}Edit Bids{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+{% if initialized %}
+<div class="row">
+  <div class="u-full-width">
+    <div class="scrolling-wrapper-flexbox">
+      <form method="POST" id="bid-form"></form>
+      <table>
+        <thead>
+          <tr>
+            <th class="sticky-col first-col-120">Unit Name</th>
+            {% for header in pretty_headers %}
+              <th>{{ header }}</th>
+            {% endfor %}
+          </tr>
+        </thead>
+        {# 
+          Each form input is identified by the following name:
+          {{ 'id_' ~ row['unit_id'] ~ '_header_' ~ bids.columns[2:][loop.index - 1] }} 
+        #}
+        <tbody>
+          {% for row in bids.itertuples() %}
+            <tr>
+              <td class="sticky-col first-col-120">{{ row['unit_name'] }}</td>
+              {% for bid_value in row[3:] %}
+                <td>
+                  <input 
+                  form="bid-form"
+                  type="text" 
+                  style="width: 60px; margin-bottom: 0;" 
+                  name="{{ 'id-' ~ row['unit_id'] ~ '-header-' ~ bids.columns[2:][loop.index - 1] }}" 
+                  placeholder="{% if bid_value == None %}{% else %}{{ '{:.2f}'.format(bid_value) }}{% endif %}">
+                </td>
+              {% endfor %}
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>            
+<input form="bid-form" class="button-primary" type="submit" name="place-bids" value="Save edits">
+{% else %}
+<div>
+  The game has not yet been initialized. You can intialize the game via the config panel.
+</div>
+{% endif %}
+{% endblock %}
