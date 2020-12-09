@@ -10,7 +10,8 @@ from esg2.utilities import get_game_setting, get_initialized_portfolio_ids_list
 
 # SUMMARY SPREADSHEET:
 # Captures a macroscopic summary of performance over hours.
-# -   round,hour,n_to_s_capacity,s_to_n_capacity,north,south,net,slope,auction_type,
+# -   round,hour,n_to_s_capacity,s_to_n_capacity,
+#     north_base_demand,south_base_demand,net_base_demand,slope,auction_type,
 #     [player_{player_id}_revenue,player_{player_id}_cost,player_{player_id}_profit],
 #     [player_{player_id}_balance] 
 
@@ -121,12 +122,12 @@ def determine_active_units(r, h, bids_df, schedule_df, hourly_df, portfolios_df,
 
     # Compute fraction of base demand actually purchased by market
     net_init_prod = north_production + south_production
-    demand_base = schedule_df.loc[(schedule_df['round'] == r) & (schedule_df['hour'] == h)]['net'].values.item()
+    demand_base = schedule_df.loc[(schedule_df['round'] == r) & (schedule_df['hour'] == h)]['net_base_demand'].values.item()
     scaling_factor = net_init_prod / demand_base
 
     # Compare to zone specific demand
-    north_demand = schedule_df.loc[(schedule_df['round'] == r) & (schedule_df['hour'] == h)]['north'].values.item()
-    south_demand = schedule_df.loc[(schedule_df['round'] == r) & (schedule_df['hour'] == h)]['south'].values.item()
+    north_demand = schedule_df.loc[(schedule_df['round'] == r) & (schedule_df['hour'] == h)]['north_base_demand'].values.item()
+    south_demand = schedule_df.loc[(schedule_df['round'] == r) & (schedule_df['hour'] == h)]['south_base_demand'].values.item()
     north_demand = north_demand * scaling_factor
     south_demand = south_demand * scaling_factor
 
@@ -237,9 +238,6 @@ def determine_active_units(r, h, bids_df, schedule_df, hourly_df, portfolios_df,
 
     return hourly_df
 
-# def construct_net_supply_curve(hourly_df):
-#     first  = lambda x: x[0]
-#     second = lambda x: x[1]
 
 def run_initial_activation(r, h, schedule_df, hourly_df):
 
@@ -261,7 +259,7 @@ def run_initial_activation(r, h, schedule_df, hourly_df):
     # Get auction type:
     auction_type = schedule_df.loc[(schedule_df['round'] == r) & (schedule_df['hour'] == h)]['auction_type'].values.item()
     
-    demand_base = schedule_df.loc[(schedule_df['round'] == r) & (schedule_df['hour'] == h)]['net'].values.item()
+    demand_base = schedule_df.loc[(schedule_df['round'] == r) & (schedule_df['hour'] == h)]['net_base_demand'].values.item()
     demand_slope = schedule_df.loc[(schedule_df['round'] == r) & (schedule_df['hour'] == h)]['slope'].values.item()
 
     if (demand_slope == 0): # NOTE: 0 slope is interpreted as perfect inelasticity, not perfect elasticity
@@ -274,7 +272,10 @@ def run_initial_activation(r, h, schedule_df, hourly_df):
                 return -np.inf # WORRYING
     else:
         def demand_fn(quantity):
-            return (demand_slope * (quantity - demand_base)) # price-giving function in [slope * (x - x_intercept)] form
+            # Demand function is in Q = mP + b form, where m is delta MWh over delta $ and b 
+            # is the base demand. Price function is simply the inverse of this function:
+            # P = (1/m)(Q - b)
+            return ((1 / demand_slope) * (quantity - demand_base) )
 
     print("Calculating net curve")
     # print("Net demand: {}".format(net_demand))
@@ -315,8 +316,8 @@ def run_initial_activation(r, h, schedule_df, hourly_df):
                 # with nonzero slope:
                 intersect_quantity = 0
                 if (demand_slope != 0):
-                    # algebra gives quantity produced = bid/demand_slope + demand_base
-                    intersect_quantity = bid/demand_slope + demand_base
+                    # algebra gives quantity produced = bid * demand_slope + demand_base
+                    intersect_quantity = (bid * demand_slope) + demand_base
                 else:
                     # vertical line
                     intersect_quantity = demand_base

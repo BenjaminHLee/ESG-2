@@ -97,18 +97,22 @@
   {% if initialized %}
   {# move to the bottom to minimize risk of accidental initialization #}
   <div class="top-bordered">
-    <h1 class="caps-header" style="margin-top: 2rem;">Initialize Game</h1>
-    <p>
-      Pressing this button will overwrite the bids file, summary file, and hourly files. 
-      They will be overwritten in accordance with the current player accounts as
-      well as the contents of the config files. <b>This will restart an existing game.</b>
-      Before initializing the game, be sure to verify that the configuration files 
-      and player accounts are correct. You should not need to initialize more than 
-      once per game.
-    </p>
-    <form action="{{ url_for('admin.start_game') }}" style="margin-bottom: 3rem;" method="post" onsubmit="return confirm('Are you sure you want to overwite the specified files? This action cannot be undone.');">
-      <input class="{% if not initialized %}button-primary{% endif %}" type="submit" name="intialize" value="Initialize Game">
-    </form>
+    <div class="row">
+      <div class="eight columns">
+        <h1 class="caps-header" style="margin-top: 2rem;">Initialize Game</h1>
+        <p>
+          Pressing this button will overwrite the bids file, summary file, and hourly files. 
+          They will be overwritten in accordance with the current player accounts as
+          well as the contents of the config files. <b>This will restart an existing game.</b>
+          Before initializing the game, be sure to verify that the configuration files 
+          and player accounts are correct. You should not need to initialize more than 
+          once per game.
+        </p>
+        <form action="{{ url_for('admin.start_game') }}" style="margin-bottom: 3rem;" method="post" onsubmit="return confirm('Are you sure you want to overwite the specified files? This action cannot be undone.');">
+          <input class="{% if not initialized %}button-primary{% endif %}" type="submit" name="intialize" value="Initialize Game">
+        </form>
+      </div>
+    </div>
   </div>
   {% endif %}
 {% endblock %}

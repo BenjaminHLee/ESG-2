@@ -174,19 +174,21 @@ Sets variable parameters on an hourly basis.
   capacity (in MWh). Only relevant if adjustment is enabled. 
   * `s_to_n_capacity`: Float. Determines the south-to-north transmission 
   capacity (in MWh). Only relevant if adjustment is enabled. 
-  * `north`: Float. Determines the northern zone's demand (in MWh). Only 
-  relevant if adjustment is enabled. 
-  * `south`: Float. Determines the southern zone's demand (in MWh). Only 
-  relevant if adjustment is enabled. 
-  * `net`: Float. Determines the net demand (in MWh) at price = 0. Used in 
-  non-adjustment activation. Also used in pre-adjustment activation (if 
-  adjustment is enabled). 
+  * `north_base_demand`: Float. Determines the northern zone's base demand 
+  (in MWh). Only relevant if adjustment is enabled. 
+  * `south_base_demand`: Float. Determines the southern zone's base demand 
+  (in MWh). Only relevant if adjustment is enabled. 
+  * `net_base_demand`: Float. Determines the net demand (in MWh) at price = 0. 
+  Used in non-adjustment activation and in pre-adjustment preliminary activation 
+  (if adjustment is enabled). 
   * `slope`: Float. Should be negative. Determines the slope of the demand 
-  curve. If `slope` is `0`, the engine assumes that demand should be perfectly 
+  curve. Read: for each dollar increase in price, this is how many fewer 
+  MW-hours will be demanded.
+  If `slope` is `0`, the engine assumes that demand should be perfectly 
   inelastic.
   Note: demand curves are defined as follows: 
-  `Price = slope * (Quantity - base demand)`, where `base demand` is `net`, 
-  `north`, or `south`, depending on the context.
+  `Price = slope * (Quantity - base demand)`, where `base demand` is `net_`, 
+  `north_`, or `south_`, depending on the context.
   * `auction_type`: `uniform` or `discrete`. Determines whether the hour's price 
   is uniform across all producing unit or each unit receives its bidded price.
 

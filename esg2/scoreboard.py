@@ -296,7 +296,7 @@ def create_hour_chart(schedule_df, hourly_df, r, h, adjustment=False, alpha_boos
                                 ]))
 
     current_row = schedule_df[schedule_df['round'] == r][schedule_df['hour'] == h]
-    net = current_row.iloc[0]['net']
+    net = current_row.iloc[0]['net_base_demand']
     slope = current_row.iloc[0]['slope']
 
     if slope == 0:
@@ -304,7 +304,7 @@ def create_hour_chart(schedule_df, hourly_df, r, h, adjustment=False, alpha_boos
             return net
     else:
         def demand_y_to_x(y):
-            return (float(y) / float(slope)) + net
+            return (float(y) * float(slope)) + net
 
     demand_y_min = min_bid - bid_range * 0.05
     demand_y_max = max_bid + bid_range * 0.05
@@ -332,7 +332,7 @@ def get_supply_demand_intercept(hourly_df, schedule_df, r, h):
     """Returns the intersection of the supply and demand curves in the form (quantity, price)."""
     
     current_row = schedule_df[schedule_df['round'] == r][schedule_df['hour'] == h]
-    net = current_row.iloc[0]['net']
+    net = current_row.iloc[0]['net_base_demand']
     slope = current_row.iloc[0]['slope']
 
     if (slope == 0): # NOTE: 0 slope is interpreted as perfect inelasticity, not perfect elasticity
@@ -345,7 +345,7 @@ def get_supply_demand_intercept(hourly_df, schedule_df, r, h):
                 return -np.inf # WORRYING
     else:
         def demand_fn(quantity):
-            return (slope * (quantity - net)) # price-giving function in [slope * (x - x_intercept)] form
+            return ((1 / slope) * (quantity - net)) # price-giving function: inverse of Q = mP + b
 
     running_production = 0
     intercept_price = 0
@@ -369,8 +369,8 @@ def get_supply_demand_intercept(hourly_df, schedule_df, r, h):
                 # with nonzero slope:
                 intersect_quantity = 0
                 if (slope != 0):
-                    # algebra gives quantity produced = bid/demand_slope + demand_base
-                    intersect_quantity = bid/slope + net
+                    # algebra gives quantity produced = demand_slope * bid + demand_base
+                    intersect_quantity = (bid * slope) + net
                 else:
                     # vertical line
                     intersect_quantity = net
@@ -461,7 +461,8 @@ def create_summary_chart(summary_df):
 
 
     chart.yaxis[0].formatter = NumeralTickFormatter(format="0[.]0 a")
-    # For more on Bokeh formatting, see https://docs.bokeh.org/en/latest/docs/reference/models/formatters.html#bokeh.models.formatters.NumeralTickFormatter
+    # For more on Bokeh formatting, see 
+    # https://docs.bokeh.org/en/latest/docs/reference/models/formatters.html#bokeh.models.formatters.NumeralTickFormatter
     
     # Add 1 for initial balance datapoint (post-auction pre-spot markets)
     chart.xaxis.ticker = list(range(len(r_h) + 1)) 
