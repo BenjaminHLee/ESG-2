@@ -351,10 +351,10 @@ hr {
 
 .theme-switch-wrapper .slider:before {
   background-color: #bbb;
-  bottom: 4px;
+  bottom: 3px;
   content: "";
   height: 26px;
-  left: 4px;
+  left: 3px;
   position: absolute;
   transition: .1s;
   width: 26px; }
@@ -371,7 +371,7 @@ hr {
 
 .theme-switch-wrapper .slider.round {
   border-radius: 34px;
-  border-width: 1px;
+  border: solid 1px;
   border-color: var(--main-border-color); }
 
 .theme-switch-wrapper .slider.round::before {
