@@ -232,6 +232,7 @@ def create_hour_chart(schedule_df, hourly_df, r, h, adjustment=False, alpha_boos
             curve_dict['ys'].append([y, y])
             curve_dict['portfolio_name'].append(row['portfolio_name'])
             curve_dict['unit_name'].append(row['unit_name'])
+            curve_dict['unit_location'].append(row['unit_location'])
             curve_dict['adj_bid'].append("{:0.2f}".format(y))
             curve_dict['mwh_adjusted'].append(row['mwh_adjusted_' + adj_dir])
             curve_dict['color'].append(colors[int(row['portfolio_id']) - 1 % len(colors)])
@@ -278,6 +279,7 @@ def create_hour_chart(schedule_df, hourly_df, r, h, adjustment=False, alpha_boos
         chart.add_tools(HoverTool(renderers=[up_adj_curve], show_arrow=False, line_policy='interp',
                                 point_policy='follow_mouse', attachment='below', tooltips=[
                                     ('Portfolio', '@portfolio_name'),
+                                    ('Location', '@unit_location'),
                                     ('Unit', '@unit_name'),
                                     ('Up Adj. $/MWh', '@adj_bid'),
                                     ('MWh Adjusted Up', '@mwh_adjusted')
@@ -290,6 +292,7 @@ def create_hour_chart(schedule_df, hourly_df, r, h, adjustment=False, alpha_boos
         chart.add_tools(HoverTool(renderers=[down_adj_curve], show_arrow=False, line_policy='interp',
                                 point_policy='follow_mouse', attachment='below', tooltips=[
                                     ('Portfolio', '@portfolio_name'),
+                                    ('Location', '@unit_location'),
                                     ('Unit', '@unit_name'),
                                     ('Down Adj. $/MWh', '@adj_bid'),
                                     ('MWh Adjusted Down', '@mwh_adjusted')
