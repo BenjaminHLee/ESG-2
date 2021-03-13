@@ -1,6 +1,6 @@
 # ESG-2
 
-This program was written for internal noncommercial educational purposes for
+This program was written for internal noncommercial educational use by
 The Nueva School's environmental economics course. If you have questions
 regarding usage, licensing, or any other topics, please contact me directly.
 
