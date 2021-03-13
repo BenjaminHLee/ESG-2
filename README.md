@@ -1,24 +1,52 @@
 # ESG-2
-Flask app is at MVP status. Supports ESG-1 games. Pretty hourly charts!
 
-FEATURES:
-- Full web app
-- SQLite database
-- Account management via command line
-- Player management via web app
-- Configurable setting files
-- Admin dashboard
-- Player dashboard
-- Scoreboard
-- Pretty charts
-- Per-unit adjustment bidding
+This program was written for internal noncommercial educational purposes for
+The Nueva School's environmental economics course. If you have questions
+regarding usage, licensing, or any other topics, please contact me directly.
 
-TODO:
-- Frontend per-portfolio adjustment bidding (contrast player-avaliable granularity)
-- Multi-instance support
-- Internal code quality improvements
-- Improve logging
-- Proper multi-instance deployment guide
+## About the game
+
+In the Electricity Strategy Game, (teams of) players play as Scheduling 
+Coordinators, entities responsible for supplying the market with electricity. 
+Their primary goal is to make more money than the other players.
+
+The game has two primary phases: the portfolio auction and the hourly spot 
+markets. Each team owns one portfolio of power generation units. Portfolios are 
+usually asymmetric; the number of units per portfolio varies, and the units 
+themselves are usually unique. Portfolios are assigned through a portfolio 
+auction (traditionally a live English auction). Players finance this initial 
+acquisition by taking on debt (effectively a negative starting balance).
+
+After all the portfolios have been auctioned off, the hourly spot markets begin. 
+Players now have the opportunity to make money selling their generated 
+electricity to the market. The hourly spot markets occur over the course of a 
+set number of days, with a set number of hours scheduled to occur each day. 
+During each hour, players submit bid prices on a per-unit basis. These prices 
+represent the price per megawatt-hour (MWh) the player would have to be paid in 
+order to activate that unit's power generation capabilities. Once all players 
+have submitted their bids for an hour, the administrator 'runs' the hour.
+
+A supply curve is constructed from the market-wide bids (from all players), and 
+the market-wide demand curve is constructed from the parameters provided in the 
+game schedule file. Units 'below' the demand curve are activated; units 'above' 
+the demand curve are 'too expensive' and are not activated, as the market will 
+not pay for those bids. Activated units incur their variable production costs; 
+all units incur operations and maintenance costs regardless of their activation 
+status. Units that are activated sell their electricity. The price they receive 
+depends on the hour's auction type: in a discrete price hour, the unit receives 
+its bidded price per MWh; in a uniform price hour, the highest activated price 
+per MWh will be paid for all active units, regardless of their submitted bid 
+price. The revenues and costs are then recorded for each player. An additional 
+interest factor is incurred at the start of each day. The interest rate, among 
+other settings, is set in the game settings file.
+
+The game engine also supports an additional feature: adjustment bidding. Based 
+on the California Independent System Operator (CAISO) adjustment bidding 
+procedure, this feature reflects the geographic realities of power transmission 
+and the importance of location-specific production and demand. More details 
+regarding adjustment bidding can be found 
+[here](https://github.com/BenjaminHLee/ESG-2/blob/esg2-csv-tool/README.md). If 
+adjustment bids are not enabled, disregard this section.
 
 ## Admin guide
 
@@ -191,51 +219,6 @@ Sets variable parameters on an hourly basis.
   `north_`, or `south_`, depending on the context.
   * `auction_type`: `uniform` or `discrete`. Determines whether the hour's price 
   is uniform across all producing unit or each unit receives its bidded price.
-
-  
-## About the game
-
-In the Electricity Strategy Game, (teams of) players play as Scheduling 
-Coordinators, entities responsible for supplying the market with electricity. 
-Their primary goal is to make more money than the other players.
-
-The game has two primary phases: the portfolio auction and the hourly spot 
-markets. Each team owns one portfolio of power generation units. Portfolios are 
-usually asymmetric; the number of units per portfolio varies, and the units 
-themselves are usually unique. Portfolios are assigned through a portfolio 
-auction (traditionally a live English auction). Players finance this initial 
-acquisition by taking on debt (effectively a negative starting balance).
-
-After all the portfolios have been auctioned off, the hourly spot markets begin. 
-Players now have the opportunity to make money selling their generated 
-electricity to the market. The hourly spot markets occur over the course of a 
-set number of days, with a set number of hours scheduled to occur each day. 
-During each hour, players submit bid prices on a per-unit basis. These prices 
-represent the price per megawatt-hour (MWh) the player would have to be paid in 
-order to activate that unit's power generation capabilities. Once all players 
-have submitted their bids for an hour, the administrator 'runs' the hour.
-
-A supply curve is constructed from the market-wide bids (from all players), and 
-the market-wide demand curve is constructed from the parameters provided in the 
-game schedule file. Units 'below' the demand curve are activated; units 'above' 
-the demand curve are 'too expensive' and are not activated, as the market will 
-not pay for those bids. Activated units incur their variable production costs; 
-all units incur operations and maintenance costs regardless of their activation 
-status. Units that are activated sell their electricity. The price they receive 
-depends on the hour's auction type: in a discrete price hour, the unit receives 
-its bidded price per MWh; in a uniform price hour, the highest activated price 
-per MWh will be paid for all active units, regardless of their submitted bid 
-price. The revenues and costs are then recorded for each player. An additional 
-interest factor is incurred at the start of each day. The interest rate, among 
-other settings, is set in the game settings file.
-
-The game engine also supports an additional feature: adjustment bidding. Based 
-on the California Independent System Operator (CAISO) adjustment bidding 
-procedure, this feature reflects the geographic realities of power transmission 
-and the importance of location-specific production and demand. More details 
-regarding adjustment bidding can be found 
-[here](https://github.com/BenjaminHLee/ESG-2/blob/esg2-csv-tool/README.md). If 
-adjustment bids are not enabled, disregard this section.
 
 ## About the app
 
