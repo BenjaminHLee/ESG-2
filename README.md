@@ -1,6 +1,6 @@
 # ESG-2
 
-[Check out the demo instance here!](https://esg-2.site/)
+<a href="https://esg-2.site/" target="_blank">Check out the demo instance here!</a>
 
 This program was written for internal noncommercial educational use by
 The Nueva School's environmental economics course. If you have questions
