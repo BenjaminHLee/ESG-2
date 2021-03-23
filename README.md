@@ -1,5 +1,7 @@
 # ESG-2
 
+[Check out the demo instance here!](https://esg-2.site/)
+
 This program was written for internal noncommercial educational use by
 The Nueva School's environmental economics course. If you have questions
 regarding usage, licensing, or any other topics, please contact me directly.
