@@ -1,10 +1,4 @@
-function fetchCharts(r, h) {
-    var t = 'light';
-    if (currentTheme === null || currentTheme === 'dark') {
-        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-            t = 'dark';
-        }
-    }
+function fetchCharts(r, h, t) {
     fetch("/chart/hourly/r" + r +  "h" + h + "?theme=" + t)
         .then(function(response) { return response.json(); })
         .then(function(item) { return Bokeh.embed.embed_item(item); })
@@ -12,3 +6,5 @@ function fetchCharts(r, h) {
         .then(function(response) { return response.json(); })
         .then(function(item) { return Bokeh.embed.embed_item(item); })
 }
+
+var scoreboardPage = true;

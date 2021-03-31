@@ -1,4 +1,4 @@
-const currentTheme = localStorage.getItem('theme');
+var currentTheme = localStorage.getItem('theme');
 if (currentTheme === null) {
     if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
         document.documentElement.setAttribute('data-theme', 'dark');
@@ -21,11 +21,23 @@ window.onload = function () {
         if (e.target.checked) {
             document.documentElement.setAttribute('data-theme', 'dark');
             localStorage.setItem('theme', 'dark');
+            currentTheme = 'dark';
         }
         else {        
             document.documentElement.setAttribute('data-theme', 'light');
             localStorage.setItem('theme', 'light');
+            currentTheme = 'light';
         }    
+
+        try {
+            if (scoreboardPage == true) {
+                document.getElementById('hourly-chart').innerHTML = "";
+                document.getElementById('summary-chart').innerHTML = "";
+                fetchCharts(r, h, currentTheme);
+            }
+        } catch {
+            ;
+        }
     }
 
     toggleSwitch.addEventListener('change', switchTheme, false);

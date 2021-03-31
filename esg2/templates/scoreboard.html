@@ -1,13 +1,16 @@
 {% extends 'base.html' %}
 {% block title %}Scoreboard{% endblock %}
 {% block header %}
+  <script src="https://cdn.bokeh.org/bokeh/release/bokeh-2.1.1.min.js" crossorigin="anonymous"$></script>
 {% endblock %}
 
 {% block content %}
 {% if initialized %}
   <script src="{{ url_for('static', filename='scoreboard-fetch-charts.js') }}"></script>
   <script id="chart-fetching-script">
-    fetchCharts("{{ chart_r_h.split('/')[0] }}", "{{ chart_r_h.split('/')[1] }}")
+    r = "{{ chart_r_h.split('/')[0] }}";
+    h = "{{ chart_r_h.split('/')[1] }}";
+    fetchCharts(r, h, localStorage.getItem('theme'));
   </script>
   <div id="hourly-chart-div">
     <h1 class="caps-header">Hourly charts</h1>
