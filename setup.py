@@ -8,5 +8,8 @@ setup(
     zip_safe=False,
     install_requires=[
         'flask',
+        'pandas',
+        'WTForms',
+        'bokeh==2.1.1'
     ],
 )
