@@ -5,7 +5,8 @@ import os
 import numpy as np
 import pandas as pd
 
-from esg2 import CSV_FOLDER, CONFIG_FOLDER, HOURLY_FOLDER
+from flask import current_app
+
 from esg2.utilities import get_game_setting, get_initialized_portfolio_ids_list
 
 # SUMMARY SPREADSHEET:
@@ -36,7 +37,7 @@ def create_summary_sheet(schedule_df, players_df):
     summary_df = pd.concat([schedule_df, pd.DataFrame(columns=(summary_player_headers))], axis=1)
 
     # summary.csv is saved in the /csv/ directory.
-    summary_df.to_csv(os.path.join(CSV_FOLDER, 'summary.csv'), index=False)
+    summary_df.to_csv(os.path.join(current_app.instance_path, 'csv', 'summary.csv'), index=False)
 
 # HOURLY SPREADSHEETS:
 # A set of spreadsheets (one per hour) recording bids, production, and revenue/cost for each unit. 
@@ -62,7 +63,7 @@ def create_hourly_sheets(schedule_df, portfolios_df):
     for (r, h) in round_hour_tuples:
         hourly_df = pd.concat([portfolios_df, pd.DataFrame(columns=(hourly_additional_headers))], axis=1)
         # round_r_hour_h.csv is saved in the /csv/hourly/ directory.
-        hourly_df.to_csv(os.path.join(HOURLY_FOLDER, 'round_' + str(r) + '_hour_' + str(h) + '.csv'), index=False)
+        hourly_df.to_csv(os.path.join(current_app.instance_path, 'csv', 'hourly', 'round_' + str(r) + '_hour_' + str(h) + '.csv'), index=False)
 
 # CURRENT BID SPREADSHEET:
 # Records bids for all hours as submitted by players. Constantly updating according to player form 
@@ -99,7 +100,7 @@ def create_bids_sheet(schedule_df, portfolios_df):
         # No bid: default to max bid
 
     # bids.csv is saved in the /csv/ directory.
-    bids_df.to_csv(os.path.join(CSV_FOLDER, 'bids.csv'),index=False)
+    bids_df.to_csv(os.path.join(current_app.instance_path, 'csv', 'bids.csv'),index=False)
 
 
 def determine_active_units(r, h, bids_df, schedule_df, hourly_df, portfolios_df, adjustment):
@@ -427,7 +428,7 @@ def last_hour(r, h): # TODO: update this to handle variable numbers of hours
 def run_hour(r, h, bids_df, schedule_df, portfolios_df, adjustment):
     print("Running round {} hour {}".format(r, h))
     # read hourly csv
-    hourly_df = pd.read_csv(os.path.join(HOURLY_FOLDER, 'round_' + str(r) + '_hour_' + str(h) + '.csv'))
+    hourly_df = pd.read_csv(os.path.join(current_app.instance_path, 'csv', 'hourly', 'round_' + str(r) + '_hour_' + str(h) + '.csv'))
 
     # determine active units
     hourly_df = determine_active_units(r, h, bids_df, schedule_df, hourly_df, portfolios_df, adjustment)
@@ -438,7 +439,7 @@ def run_hour(r, h, bids_df, schedule_df, portfolios_df, adjustment):
     # complete hourly sheet columns carbon_produced,revenue,adjust_down_revenue,cost_var,cost_om,profit
     hourly_df = complete_hourly_sheet(hourly_df, last)
 
-    hourly_df.to_csv(os.path.join(HOURLY_FOLDER, 'round_' + str(r) + '_hour_' + str(h) + '.csv'),index=False) 
+    hourly_df.to_csv(os.path.join(current_app.instance_path, 'csv', 'hourly', 'round_' + str(r) + '_hour_' + str(h) + '.csv'),index=False) 
 
 
 # SUMMARY SPREADSHEET:
@@ -448,7 +449,7 @@ def run_hour(r, h, bids_df, schedule_df, portfolios_df, adjustment):
 #     [player_{player_id}_balance] 
 
 def update_summary(r, h, summary_df, players_df):
-    hourly_df = pd.read_csv(os.path.join(HOURLY_FOLDER, 'round_' + str(r) + '_hour_' + str(h) + '.csv'))
+    hourly_df = pd.read_csv(os.path.join(current_app.instance_path, 'csv', 'hourly', 'round_' + str(r) + '_hour_' + str(h) + '.csv'))
 
     portfolio_ids = players_df['portfolio_id'].tolist()
 
@@ -497,41 +498,5 @@ def update_summary(r, h, summary_df, players_df):
 
         summary_df.loc[(summary_df['round'] == r) & (summary_df['hour'] == h),balance_header] = round(balance, 2)
 
-    summary_df.to_csv(os.path.join(CSV_FOLDER, 'summary.csv'), index=False)
+    summary_df.to_csv(os.path.join(current_app.instance_path, 'csv', 'summary.csv'), index=False)
 
-
-# # read CONFIG SPREADSHEETS from /csv/config files
-# schedule_df = pd.read_csv(os.path.join(CONFIG_FOLDER, 'schedule.csv'))
-# portfolios_df = pd.read_csv(os.path.join(CONFIG_FOLDER, 'portfolios.csv'))
-# players_df = pd.read_csv(os.path.join(CONFIG_FOLDER, 'players.csv'))
-
-# schedule_df = schedule_df.sort_values(by=['round', 'hour'], ascending=[True, True])
-# players_df = players_df.sort_values(by=['portfolio_id'], ascending=[True])
-
-# create_summary_sheet(schedule_df, players_df)
-# create_hourly_sheets(schedule_df, portfolios_df)
-
-# summary_df = pd.read_csv(os.path.join(CSV_FOLDER, 'summary.csv'))
-# bids_df = pd.read_csv('csv/bids.csv')
-
-# run_hour(1, 1, bids_df)
-# print("Hour 1 run; updating summary")
-# update_summary(1, 1, summary_df, players_df)
-
-# run_hour(1, 2, bids_df)
-# print("Hour 2 run; updating summary")
-# update_summary(1, 2, summary_df, players_df)
-
-# run_hour(1, 3, bids_df)
-# print("Hour 3 run; updating summary")
-# update_summary(1, 3, summary_df, players_df)
-
-# run_hour(1, 4, bids_df)
-# print("Hour 4 run; updating summary")
-# update_summary(1, 4, summary_df, players_df)
-
-
-
-# TODO : Fix decimal inconsistencies
-# TODO : Design csv imports consistently — 
-#   when should csvs be read? Which functions should take in dataframes, and which should read from /csv/?

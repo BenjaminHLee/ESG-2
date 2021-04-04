@@ -6,7 +6,7 @@ import decimal
 import pandas as pd
 
 from flask import (
-    Blueprint, flash, g, redirect, render_template, request, session, url_for
+    Blueprint, flash, g, redirect, render_template, request, session, url_for, current_app
 )
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.exceptions import abort
@@ -15,7 +15,6 @@ from wtforms import (
     Form, SelectField, DecimalField, StringField, PasswordField, validators
 )
 
-from esg2 import CONFIG_FOLDER
 from esg2.db import get_db
 from esg2.utilities import get_portfolio_names_list
 
@@ -79,7 +78,7 @@ class RegistrationForm(Form):
 def register():
     form = RegistrationForm(request.form)
     # dynamically set portfolio dropdown selection options based off of unique values in portfolios.csv
-    portfolios_df = pd.read_csv(os.path.join(CONFIG_FOLDER, 'portfolios.csv'))
+    portfolios_df = pd.read_csv(os.path.join(current_app.instance_path, 'csv', 'config', 'portfolios.csv'))
     form.portfolio.choices = [(portfolio, portfolio) for portfolio in get_portfolio_names_list()]
     
     if request.method == 'POST' and form.validate():

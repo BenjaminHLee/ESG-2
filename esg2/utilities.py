@@ -1,7 +1,7 @@
 import os
 import pandas as pd
 
-from esg2 import CSV_FOLDER, CONFIG_FOLDER, HOURLY_FOLDER
+from flask import current_app
 
 def form_entry_to_tuple(key, value):
     """Takes in a key of the form "id-{id}-header-{header}" and a value; 
@@ -33,38 +33,38 @@ def make_pretty_header(bid_base_r_h):
 
 def get_game_setting(setting):
     """Gets the setting value from the game_settings.csv file"""
-    game_settings_df = pd.read_csv(os.path.join(CONFIG_FOLDER, 'game_settings.csv'))
+    game_settings_df = pd.read_csv(os.path.join(current_app.instance_path, 'csv', 'config', 'game_settings.csv'))
     return game_settings_df.loc[game_settings_df['setting'] == setting]['value'].item()
 
 def get_portfolio_names_list():
     """Reads portfolios.csv and returns a list of unique portfolio names"""
-    portfolios_df = pd.read_csv(os.path.join(CONFIG_FOLDER, 'portfolios.csv'))
+    portfolios_df = pd.read_csv(os.path.join(current_app.instance_path, 'csv', 'config', 'portfolios.csv'))
     portfolios = portfolios_df['portfolio_name'].unique()
     return portfolios
 
 def get_portfolio_name_by_id(i):
     """Reads portfolios.csv and returns the portfolio_name with portfolio_id == id"""
-    portfolios_df = pd.read_csv(os.path.join(CONFIG_FOLDER, 'portfolios.csv'))
+    portfolios_df = pd.read_csv(os.path.join(current_app.instance_path, 'csv', 'config', 'portfolios.csv'))
     portfolio_name = portfolios_df.loc[portfolios_df['portfolio_id'] == i]['portfolio_name'].unique().item()
     return portfolio_name
 
 def get_starting_money_by_portfolio_id(i):
     """Reads players.csv and returns the starting_money value where portfolio_id == i"""
-    players_df = pd.read_csv(os.path.join(CSV_FOLDER, 'players.csv'))
+    players_df = pd.read_csv(os.path.join(current_app.instance_path, 'csv', 'players.csv'))
     return players_df.loc[(players_df['portfolio_id'] == i),'starting_money'].values.astype(float)[0]
 
 
 def get_initialized_portfolio_names_list():
     """Reads players and returns the list of portfolio names with an initialized player
     (i.e. the list of portfolios that are involved in the initialized game)"""
-    players_df = pd.read_csv(os.path.join(CSV_FOLDER, 'players.csv'))
+    players_df = pd.read_csv(os.path.join(current_app.instance_path, 'csv', 'players.csv'))
     names = players_df['portfolio'].unique()
     return names
 
 def get_initialized_portfolio_ids_list():
     """Reads players and returns the list of portfolio ids with an initialized player
     (i.e. the list of portfolios that are involved in the initialized game)"""
-    players_df = pd.read_csv(os.path.join(CSV_FOLDER, 'players.csv'))
+    players_df = pd.read_csv(os.path.join(current_app.instance_path, 'csv', 'players.csv'))
     names = players_df['portfolio_id'].unique()
     return names
 

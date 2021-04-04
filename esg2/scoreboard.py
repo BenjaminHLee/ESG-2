@@ -23,7 +23,6 @@ from bokeh.plotting import figure
 from bokeh.resources import CDN
 from bokeh.themes import Theme, built_in_themes
 
-from esg2 import CSV_FOLDER, HOURLY_FOLDER, CONFIG_FOLDER
 from esg2.db import get_db
 from esg2.utilities import (
     get_game_setting, last_filled_summary_row, round_hour_names, get_portfolio_name_by_id, 
@@ -70,8 +69,8 @@ def scoreboard():
     ).fetchone() is None:
         return render_template('scoreboard.html', initialized=False)
 
-    summary_df = pd.read_csv(os.path.join(CSV_FOLDER, 'summary.csv'))
-    schedule_df = pd.read_csv(os.path.join(CONFIG_FOLDER, 'schedule.csv'))
+    summary_df = pd.read_csv(os.path.join(current_app.instance_path, 'csv', 'summary.csv'))
+    schedule_df = pd.read_csv(os.path.join(current_app.instance_path, 'csv', 'config', 'schedule.csv'))
 
     # Default value if request args are not provided
     r, h = last_filled_summary_row(summary_df)
@@ -145,17 +144,17 @@ def r_h_column_to_linked_html(row):
             
 @bp.route('/csv/<filename>')
 def engine_file(filename):
-    return send_from_directory(CSV_FOLDER, filename)
+    return send_from_directory(os.path.join(current_app.instance_path, 'csv'), filename)
 
 @bp.route('/csv/hourly/r<r>h<h>.csv')
 def hourly_file(r, h):
-    return send_from_directory(HOURLY_FOLDER, "round_" + r + "_hour_" + h + ".csv")
+    return send_from_directory(os.path.join(current_app.instance_path, 'csv', 'hourly'), "round_" + r + "_hour_" + h + ".csv")
 
 @bp.route('/chart/hourly/r<r>h<h>')
 def hourly_chart(r, h):
     try:
-        hourly_df = pd.read_csv(os.path.join(HOURLY_FOLDER, "round_" + str(r) + "_hour_" + str(h) + ".csv"))
-        schedule_df = pd.read_csv(os.path.join(CONFIG_FOLDER, 'schedule.csv'))
+        hourly_df = pd.read_csv(os.path.join(current_app.instance_path, 'csv', 'hourly', "round_" + str(r) + "_hour_" + str(h) + ".csv"))
+        schedule_df = pd.read_csv(os.path.join(current_app.instance_path, 'csv', 'config', 'schedule.csv'))
         if request.args.get('theme') == 'dark': 
             alpha_boost = 0.2
         else: 
@@ -411,7 +410,7 @@ def get_supply_demand_intercept(hourly_df, schedule_df, r, h):
 @bp.route('/chart/summary')
 def summary_chart():
     try:
-        summary_df = pd.read_csv(os.path.join(CSV_FOLDER, 'summary.csv'))
+        summary_df = pd.read_csv(os.path.join(current_app.instance_path, 'csv', 'summary.csv'))
         p = create_summary_chart(summary_df)
         if request.args.get('theme') == 'dark':
             return json.dumps(json_item(p, "summary-chart", theme=Theme(json=DARK_THEME_JSON)))

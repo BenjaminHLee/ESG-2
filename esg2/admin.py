@@ -4,10 +4,9 @@ import decimal
 import pandas as pd
 
 from flask import (
-    Blueprint, flash, g, redirect, render_template, request, send_from_directory, session, url_for
+    Blueprint, flash, g, redirect, render_template, request, send_from_directory, session, url_for, current_app
 )
 
-from esg2 import CSV_FOLDER, CONFIG_FOLDER
 from esg2.db import get_db
 from esg2.auth import admin_login_required
 from esg2.utilities import (
@@ -66,14 +65,14 @@ def config_upload():
             return redirect(request.url)
         if file and allowed_file(file.filename):
             filename = request.form['filename'] + '.csv'
-            file.save(os.path.join(CONFIG_FOLDER, filename))
+            file.save(os.path.join(current_app.instance_path, 'csv', 'config', filename))
             flash('File uploaded successfully')
             return redirect(url_for('admin.config_upload'))
     return render_template('admin/config_upload.html')
 
 @bp.route('/csv/config/<filename>')
 def uploaded_config_file(filename):
-    return send_from_directory(CONFIG_FOLDER, filename)
+    return send_from_directory(os.path.join(current_app.instance_path, 'csv', 'config'), filename)
 
 @bp.route('/admin/delete-user', methods=['POST'])
 @admin_login_required
@@ -134,7 +133,7 @@ def set_starting_money():
 def set_portfolio():
     portfolio = request.form['portfolio']
 
-    portfolios_df = pd.read_csv(os.path.join(CONFIG_FOLDER, 'portfolios.csv'))
+    portfolios_df = pd.read_csv(os.path.join(current_app.instance_path, 'csv', 'config', 'portfolios.csv'))
     portfolio_id = int(portfolios_df.loc[portfolios_df['portfolio_name'] == portfolio, 'portfolio_id'].iloc[0])
 
     db = get_db()
@@ -174,18 +173,18 @@ def start_game():
         db
     )
     players_df = players_df.sort_values(by=['portfolio_id'], ascending=[True])
-    players_df.to_csv(os.path.join(CSV_FOLDER, 'players.csv'), index=False)
+    players_df.to_csv(os.path.join(current_app.instance_path, 'csv', 'players.csv'), index=False)
 
     # Create summary, hourly, bids sheets
-    schedule_df = pd.read_csv(os.path.join(CONFIG_FOLDER, 'schedule.csv'))
+    schedule_df = pd.read_csv(os.path.join(current_app.instance_path, 'csv', 'config', 'schedule.csv'))
     schedule_df = schedule_df.sort_values(by=['round', 'hour'], ascending=[True, True])
-    portfolios_df = pd.read_csv(os.path.join(CONFIG_FOLDER, 'portfolios.csv'))
+    portfolios_df = pd.read_csv(os.path.join(current_app.instance_path, 'csv', 'config', 'portfolios.csv'))
     engine.create_summary_sheet(schedule_df, players_df)
     engine.create_hourly_sheets(schedule_df, portfolios_df)
     engine.create_bids_sheet(schedule_df, portfolios_df)
 
     # Create bids table
-    bids_df = pd.read_csv(os.path.join(CSV_FOLDER, 'bids.csv'))
+    bids_df = pd.read_csv(os.path.join(current_app.instance_path, 'csv', 'bids.csv'))
     bids_df.to_sql('bids', db, index=False, if_exists='replace')
     db.commit()
 
@@ -195,12 +194,12 @@ def start_game():
 @bp.route('/admin/dashboard', methods=['GET', 'POST'])
 @admin_login_required
 def admin_dashboard():
-    schedule_df = pd.read_csv(os.path.join(CONFIG_FOLDER, 'schedule.csv'))
+    schedule_df = pd.read_csv(os.path.join(current_app.instance_path, 'csv', 'config', 'schedule.csv'))
 
     if request.method == 'POST':
-        portfolios_df = pd.read_csv(os.path.join(CONFIG_FOLDER, 'portfolios.csv'))
-        players_df = pd.read_csv(os.path.join(CSV_FOLDER, 'players.csv'))
-        summary_df = pd.read_csv(os.path.join(CSV_FOLDER, 'summary.csv'))
+        portfolios_df = pd.read_csv(os.path.join(current_app.instance_path, 'csv', 'config', 'portfolios.csv'))
+        players_df = pd.read_csv(os.path.join(current_app.instance_path, 'csv', 'players.csv'))
+        summary_df = pd.read_csv(os.path.join(current_app.instance_path, 'csv', 'summary.csv'))
 
         schedule_df = schedule_df.sort_values(by=['round', 'hour'], ascending=[True, True])
         players_df = players_df.sort_values(by=['portfolio_id'], ascending=[True])
@@ -214,7 +213,7 @@ def admin_dashboard():
 
         r = int(r)
         h = int(h)
-        bids_df = pd.read_csv(os.path.join(CSV_FOLDER, 'bids.csv'))
+        bids_df = pd.read_csv(os.path.join(current_app.instance_path, 'csv', 'bids.csv'))
 
         if get_game_setting('adjustment') == 'per portfolio' or get_game_setting('adjustment') == 'per unit':
             adjustment = True
@@ -233,7 +232,7 @@ def admin_dashboard():
     ).fetchone() is None:
         return render_template('/admin/dashboard.html', initialized=False)
 
-    summary_df = pd.read_csv(os.path.join(CSV_FOLDER, 'summary.csv'))
+    summary_df = pd.read_csv(os.path.join(current_app.instance_path, 'csv', 'summary.csv'))
     bids_df = get_pending_bids().sort_values(['unit_id'], ascending=True)
     bids_df = bids_df.where(bids_df.notnull(), None)
     unit_names_df = bids_df[['portfolio_name', 'unit_name', 'unit_id']]
@@ -344,8 +343,8 @@ def commit_bids(pending_bids_df, r, h):
     selected_bids_columns = pending_bids_df.filter(regex=(".*_" + r + "_" + h))
     selected_bids_columns = selected_bids_columns.fillna(get_game_setting('max bid')) # HACK: Figure out better nan-bid handling
     selected_column_headers = selected_bids_columns.columns
-    bids_csv_df = pd.read_csv(os.path.join(CSV_FOLDER, 'bids.csv'))
+    bids_csv_df = pd.read_csv(os.path.join(current_app.instance_path, 'csv', 'bids.csv'))
     for column in selected_column_headers:
         bids_csv_df[column] = selected_bids_columns[column]
-    bids_csv_df.to_csv(os.path.join(CSV_FOLDER, 'bids.csv'), index=False)
+    bids_csv_df.to_csv(os.path.join(current_app.instance_path, 'csv', 'bids.csv'), index=False)
 

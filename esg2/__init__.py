@@ -1,11 +1,8 @@
-import os
+import os, errno
 from os.path import dirname, realpath, join
+from shutil import copy
 
 from flask import Flask, render_template
-
-CSV_FOLDER = os.path.join(dirname(realpath(__file__)), 'csv')
-CONFIG_FOLDER = os.path.join(CSV_FOLDER, 'config')
-HOURLY_FOLDER = os.path.join(CSV_FOLDER, 'hourly')
 
 def create_app(test_config=None):
     # create and configure the app
@@ -13,7 +10,7 @@ def create_app(test_config=None):
     app.config.from_mapping(
         SECRET_KEY='dev',
         DATABASE=os.path.join(app.instance_path, 'esg2.sqlite'),
-        UPLOAD_FOLDER=CSV_FOLDER,
+        UPLOAD_FOLDER=os.path.join(app.instance_path, 'csv'),
         SEND_FILE_MAX_AGE_DEFAULT=0,
     )
 
@@ -26,9 +23,21 @@ def create_app(test_config=None):
 
     # ensure the instance folder exists
     try:
-        os.makedirs(app.instance_path)
-    except OSError:
-        pass
+        # set up csv subfolders
+        os.makedirs(os.path.join(app.instance_path, 'csv', 'config'))
+        os.makedirs(os.path.join(app.instance_path, 'csv', 'hourly'))
+    except OSError as e:
+        # directories already exist?
+        if e.errno != errno.EEXIST:
+            raise
+
+    # Copy default game config files
+    copy(os.path.join(dirname(realpath(__file__)), 'default_config', 'game_settings.csv'), 
+         os.path.join(app.instance_path, 'csv', 'config', 'game_settings.csv'))
+    copy(os.path.join(dirname(realpath(__file__)), 'default_config', 'portfolios.csv'), 
+         os.path.join(app.instance_path, 'csv', 'config', 'portfolios.csv'))
+    copy(os.path.join(dirname(realpath(__file__)), 'default_config', 'schedule.csv'), 
+         os.path.join(app.instance_path, 'csv', 'config', 'schedule.csv'))
 
     from . import db
     db.init_app(app)

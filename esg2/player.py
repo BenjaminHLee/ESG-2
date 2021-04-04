@@ -3,10 +3,9 @@ import decimal
 import pandas as pd
 
 from flask import (
-    Blueprint, flash, g, redirect, render_template, request, send_from_directory, url_for
+    Blueprint, flash, g, redirect, render_template, request, send_from_directory, url_for, current_app
 )
 
-from esg2 import CSV_FOLDER, CONFIG_FOLDER
 from esg2.db import get_db
 from esg2.auth import login_required
 from esg2.utilities import make_pretty_header, get_game_setting, form_entry_to_tuple
