@@ -54,19 +54,15 @@ adjustment bids are not enabled, disregard this section.
 
 ### Installation
 
+If you know what you're doing, the project is installable via a [.whl
+distribution file](https://github.com/BenjaminHLee/ESG-2/releases/tag/v1.0.0).
+Otherwise:
+
 Read through the following process in its entirety before starting installation.
-Currently, the only way to install this project is by cloning the repository to 
-your web server of choice. I'm currently working on improving deployment/
-instancing options, but it's a nontrivial change that will take a bit of work.
-Until then:
-1. Clone the repository
-2. [Spin up a virtual environment](https://flask.palletsprojects.com/en/1.1.x/installation/#virtual-environments)
-3. Install dependencies
-  * `pip install Flask`
-  * `pip install pandas`
-  * `pip install WTForms`
-  * `pip install bokeh==2.1.1` (Note: Bokeh 2.2.0 features a bug that may cause 
-  chart tooltips to fail. Be sure to install version 2.1.1!)
+1. [Spin up a virtual environment](https://flask.palletsprojects.com/en/1.1.x/installation/#virtual-environments)
+2. Copy the [project .whl file](https://github.com/BenjaminHLee/ESG-2/releases/tag/v1.0.0)
+3. Install the file
+  * `pip install ESG_2-1.0.0-py3-none-any.whl`
 4. Set FLASK-APP
   * `export FLASK_APP=esg2` 
   (or if you're in a Windows environment, `$env:FLASK_APP = "esg2"`)
