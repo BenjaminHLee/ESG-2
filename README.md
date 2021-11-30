@@ -232,4 +232,4 @@ designs by Christopher Martin, Steven Raanes, Merritt Vassallo, and Aidan Wen,
 who in turn referenced numerous CAISO documents and resources in their design 
 process.
 
-dm me @benjamin\_lee on Telegram.
+You can reach me at benjaminlee@brown.edu.
